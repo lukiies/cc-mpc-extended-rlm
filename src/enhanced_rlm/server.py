@@ -8,8 +8,9 @@ from typing import Optional
 from mcp.server.fastmcp import FastMCP
 
 from .chunker import Chunker
-from .config import Config, get_token_budget, load_config
-from .ranker import RankedChunk, Ranker
+from .config import Config, load_config
+from .haiku_client import HaikuDistiller, clear_cache
+from .ranker import Ranker
 from .search import KnowledgeSearch
 
 # Configure logging to stderr (not stdout which is used by STDIO transport)
@@ -23,8 +24,9 @@ logger = logging.getLogger("enhanced-rlm")
 # Initialize MCP server
 mcp = FastMCP("enhanced-rlm")
 
-# Global config - will be set on startup
+# Global config and distiller - will be set on startup
 _config: Optional[Config] = None
+_distiller: Optional[HaikuDistiller] = None
 
 
 def get_config() -> Config:
@@ -32,6 +34,11 @@ def get_config() -> Config:
     if _config is None:
         raise RuntimeError("Server not initialized. Call init_server() first.")
     return _config
+
+
+def get_distiller() -> Optional[HaikuDistiller]:
+    """Get Haiku distiller if available."""
+    return _distiller
 
 
 def classify_query(query: str) -> str:
@@ -160,16 +167,34 @@ def ask_knowledge_base(
     ranked_chunks = ranker.deduplicate(ranked_chunks)
     logger.info(f"Ranked and deduplicated to {len(ranked_chunks)} chunks")
 
-    # Step 4: Classify query and format response
-    query_type = classify_query(query)
-    token_budget = get_token_budget(query_type, config.haiku)
-    logger.info(f"Query type: {query_type}, token budget: {token_budget}")
+    # Step 4: Distill with Haiku or format raw chunks
+    distiller = get_distiller()
+    if distiller:
+        logger.info("Using Haiku for distillation")
+        result = distiller.distill(query, ranked_chunks)
+        if result.cached:
+            logger.info("Returned cached response")
+        return result.content
+    else:
+        # Fallback: format raw chunks without distillation
+        logger.info("Haiku unavailable, returning raw chunks")
+        query_type = classify_query(query)
+        return format_chunks_for_response(ranked_chunks, query_type)
 
-    # Format response
-    # NOTE: In Phase 3, this is where Haiku distillation will be added
-    response = format_chunks_for_response(ranked_chunks, query_type)
 
-    return response
+@mcp.tool()
+def clear_knowledge_cache() -> str:
+    """
+    Clear the Haiku response cache.
+
+    Use this when the knowledge base has been updated and you want
+    to ensure fresh responses.
+
+    Returns:
+        Number of cached entries cleared
+    """
+    count = clear_cache()
+    return f"Cleared {count} cached responses."
 
 
 @mcp.tool()
@@ -215,10 +240,21 @@ def init_server(workspace_path: Optional[str] = None) -> None:
     Args:
         workspace_path: Path to workspace root (or use env var / cwd)
     """
-    global _config
+    global _config, _distiller
     _config = load_config(workspace_path)
     logger.info(f"Initialized with workspace: {_config.workspace_path}")
     logger.info(f"Knowledge base exists: {_config.has_knowledge_base()}")
+
+    # Initialize Haiku distiller if API key is available
+    if _config.anthropic_api_key:
+        _distiller = HaikuDistiller(_config)
+        logger.info("Haiku distillation enabled")
+    else:
+        _distiller = None
+        logger.warning(
+            "ANTHROPIC_API_KEY not set - Haiku distillation disabled, "
+            "returning raw search results"
+        )
 
 
 def main() -> None:
