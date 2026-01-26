@@ -1,6 +1,6 @@
 # Enhanced RLM - MCP Server for Knowledge Base Retrieval
 
-An MCP (Model Context Protocol) server that provides intelligent, token-efficient knowledge base retrieval for Claude Code sessions. Based on RLM research principles (arXiv:2512.24601v1).
+An MCP (Model Context Protocol) server that provides intelligent, token-efficient knowledge base retrieval for Claude Code sessions. Based on [RLM research principles](https://arxiv.org/abs/2512.24601) (arXiv:2512.24601v1) from MIT.
 
 ## Features
 
@@ -283,7 +283,7 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Credits
 
-- Based on RLM research (arXiv:2512.24601v1) - "Recursive Language Models"
+- Based on [RLM research](https://arxiv.org/abs/2512.24601) (arXiv:2512.24601v1) - "Recursive Language Models" from MIT
 - Uses [FastMCP](https://github.com/jlowin/fastmcp) for MCP server implementation
 - Powered by [Claude Haiku 3.5](https://anthropic.com) for intelligent distillation
 
