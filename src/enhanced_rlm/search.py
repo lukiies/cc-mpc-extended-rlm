@@ -1,5 +1,7 @@
 """Ripgrep-based search module for knowledge base."""
 
+import os
+import platform
 import re
 import subprocess
 from dataclasses import dataclass
@@ -7,6 +9,39 @@ from pathlib import Path
 from typing import Optional
 
 from .config import Config
+
+
+def is_wsl_path(path: Path) -> bool:
+    """Check if a path is a WSL UNC path (\\\\wsl.localhost\\... or \\\\wsl$\\...)."""
+    path_str = str(path)
+    return path_str.startswith("\\\\wsl.localhost\\") or path_str.startswith("\\\\wsl$\\")
+
+
+def wsl_path_to_linux(path: Path) -> str:
+    """
+    Convert WSL UNC path to Linux path.
+
+    \\\\wsl.localhost\\Ubuntu\\home\\user -> /home/user
+    \\\\wsl$\\Ubuntu\\home\\user -> /home/user
+    """
+    path_str = str(path)
+    # Remove \\wsl.localhost\Distro or \\wsl$\Distro prefix
+    if path_str.startswith("\\\\wsl.localhost\\"):
+        # \\wsl.localhost\Ubuntu\home\user -> Ubuntu\home\user
+        remainder = path_str[len("\\\\wsl.localhost\\"):]
+    elif path_str.startswith("\\\\wsl$\\"):
+        remainder = path_str[len("\\\\wsl$\\"):]
+    else:
+        return path_str
+
+    # Split off the distro name: Ubuntu\home\user -> home\user
+    parts = remainder.split("\\", 1)
+    if len(parts) > 1:
+        linux_path = "/" + parts[1].replace("\\", "/")
+    else:
+        linux_path = "/"
+
+    return linux_path
 
 # Common stop words to filter out during keyword extraction
 STOP_WORDS = {
@@ -50,10 +85,25 @@ class KnowledgeSearch:
         """
         self.config = config
         self.workspace = config.workspace_path
+        self._is_windows = platform.system() == "Windows"
+        self._uses_wsl_path = is_wsl_path(self.workspace)
         self._use_ripgrep = self._check_ripgrep()
 
     def _check_ripgrep(self) -> bool:
         """Check if ripgrep is available."""
+        # If on Windows with WSL paths, check wsl.exe rg
+        if self._is_windows and self._uses_wsl_path:
+            try:
+                subprocess.run(
+                    ["wsl.exe", "rg", "--version"],
+                    capture_output=True,
+                    timeout=5,
+                )
+                return True
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                return False
+
+        # Standard ripgrep check
         try:
             subprocess.run(
                 ["rg", "--version"],
@@ -112,13 +162,21 @@ class KnowledgeSearch:
         Returns:
             Command as list of strings
         """
-        cmd = [
-            "rg",
+        # Use wsl.exe prefix if on Windows with WSL paths
+        if self._is_windows and self._uses_wsl_path:
+            cmd = ["wsl.exe", "rg"]
+            # Convert path to Linux format
+            linux_path = wsl_path_to_linux(search_path)
+        else:
+            cmd = ["rg"]
+            linux_path = str(search_path)
+
+        cmd.extend([
             "--ignore-case",  # Case insensitive
             "--line-number",  # Include line numbers
             "--no-heading",   # Put filename on each line
             "--color=never",  # No color codes in output
-        ]
+        ])
 
         # Add file type filters based on config
         for pattern_glob in self.config.knowledge_base.file_patterns:
@@ -134,7 +192,7 @@ class KnowledgeSearch:
 
         # Add pattern and path
         cmd.append(pattern)
-        cmd.append(str(search_path))
+        cmd.append(linux_path)
 
         return cmd
 
@@ -183,13 +241,16 @@ class KnowledgeSearch:
             cmd = self._build_ripgrep_command(pattern, search_path, remaining)
 
             try:
-                process = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    cwd=self.workspace,
-                )
+                # Don't use cwd for WSL paths on Windows (UNC paths not supported as cwd)
+                run_kwargs = {
+                    "capture_output": True,
+                    "text": True,
+                    "timeout": 30,
+                }
+                if not (self._is_windows and self._uses_wsl_path):
+                    run_kwargs["cwd"] = self.workspace
+
+                process = subprocess.run(cmd, **run_kwargs)
 
                 # Parse output
                 for line in process.stdout.strip().split("\n"):
@@ -233,8 +294,15 @@ class KnowledgeSearch:
         max_results: Optional[int] = None,
     ) -> list[str]:
         """Build grep command as fallback when ripgrep unavailable."""
-        cmd = [
-            "grep",
+        # Use wsl.exe prefix if on Windows with WSL paths
+        if self._is_windows and self._uses_wsl_path:
+            cmd = ["wsl.exe", "grep"]
+            linux_path = wsl_path_to_linux(search_path)
+        else:
+            cmd = ["grep"]
+            linux_path = str(search_path)
+
+        cmd.extend([
             "-r",              # Recursive
             "-i",              # Case insensitive
             "-n",              # Line numbers
@@ -243,13 +311,13 @@ class KnowledgeSearch:
             "--include=*.prg", # Include PRG files
             "--include=*.c",   # Include C files
             "--include=*.py",  # Include Python files
-        ]
+        ])
 
         if max_results:
             cmd.extend(["-m", str(max_results)])
 
         cmd.append(pattern)
-        cmd.append(str(search_path))
+        cmd.append(linux_path)
 
         return cmd
 
@@ -280,13 +348,16 @@ class KnowledgeSearch:
             cmd = self._build_grep_command(pattern, search_path, remaining)
 
             try:
-                process = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    cwd=self.workspace,
-                )
+                # Don't use cwd for WSL paths on Windows (UNC paths not supported as cwd)
+                run_kwargs = {
+                    "capture_output": True,
+                    "text": True,
+                    "timeout": 30,
+                }
+                if not (self._is_windows and self._uses_wsl_path):
+                    run_kwargs["cwd"] = self.workspace
+
+                process = subprocess.run(cmd, **run_kwargs)
 
                 for line in process.stdout.strip().split("\n"):
                     if not line:

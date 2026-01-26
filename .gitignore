@@ -43,3 +43,9 @@ htmlcov/
 # Misc
 .DS_Store
 *.log
+
+# Credentials (never commit!)
+.env
+.env.local
+*.key
+secrets.json

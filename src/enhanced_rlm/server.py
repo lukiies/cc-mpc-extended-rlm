@@ -10,7 +10,7 @@ from mcp.server.fastmcp import FastMCP
 from .chunker import Chunker
 from .config import Config, load_config
 from .haiku_client import HaikuDistiller, clear_cache
-from .ranker import Ranker
+from .ranker import Ranker, RankedChunk
 from .search import KnowledgeSearch
 
 # Configure logging to stderr (not stdout which is used by STDIO transport)
