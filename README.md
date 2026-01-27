@@ -11,6 +11,7 @@ An MCP (Model Context Protocol) server that provides intelligent, token-efficien
 - **Workspace-Specific**: Each project uses its own `CLAUDE.md` and `.claude/` folder
 - **Cross-Platform**: Works on Linux, macOS, and Windows (including WSL)
 - **Self-Learning Protocol**: Built-in rules for Claude to update knowledge base after successful task completions
+- **Auto-Sync on Startup**: Automatically commits local changes, pulls latest from GitHub, ensuring all projects run the same version
 
 ## Architecture
 
@@ -106,19 +107,27 @@ export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
 
 ## Configuration
 
-Create a `.mcp.json` file in your project root. Choose the configuration that matches your setup:
+Create a `.mcp.json` file in your project root. Choose the configuration that matches your setup.
 
-### Option 1: Linux/macOS (Native)
+### Auto-Sync Feature (Recommended)
+
+The `start_server.sh` wrapper script provides **automatic synchronization** with GitHub on every VS Code reload:
+
+1. **Commits and pushes** any local changes (from self-learning protocol)
+2. **Pulls latest changes** from GitHub (updates from other projects)
+3. **Starts the MCP server**
+
+This ensures all your projects always run the latest version of the agent without manual intervention.
+
+### Option 1: Linux/macOS (Native) - With Auto-Sync
 
 ```json
 {
   "mcpServers": {
     "enhanced-rlm": {
       "type": "stdio",
-      "command": "/path/to/cc-mpc-extended-rlm/.venv/bin/python",
+      "command": "/path/to/cc-mpc-extended-rlm/start_server.sh",
       "args": [
-        "-m",
-        "enhanced_rlm.server",
         "--path",
         "/path/to/your/project"
       ],
@@ -128,7 +137,7 @@ Create a `.mcp.json` file in your project root. Choose the configuration that ma
 }
 ```
 
-### Option 2: Windows + WSL Projects (Recommended)
+### Option 2: Windows + WSL Projects (Recommended) - With Auto-Sync
 
 If your project is in WSL but VS Code/Claude Code runs on Windows:
 
@@ -141,7 +150,7 @@ If your project is in WSL but VS Code/Claude Code runs on Windows:
       "args": [
         "bash",
         "-lc",
-        "/path/to/cc-mpc-extended-rlm/.venv/bin/python -m enhanced_rlm.server --path /path/to/your/project"
+        "/path/to/cc-mpc-extended-rlm/start_server.sh --path /path/to/your/project"
       ],
       "env": {}
     }
@@ -151,19 +160,30 @@ If your project is in WSL but VS Code/Claude Code runs on Windows:
 
 **Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.profile`).
 
-### Option 3: Windows Native Projects
+### Option 3: Windows Native Projects - With Auto-Sync
 
-For projects located on Windows filesystem (not WSL):
+For projects located on Windows filesystem (not WSL), create a `start_server.bat` wrapper:
+
+```batch
+@echo off
+cd /d "%~dp0"
+git add -A
+git commit -m "Auto-sync: Self-learning updates" --author="Claude Code Auto-Sync <noreply@anthropic.com>" 2>nul
+git push origin HEAD 2>nul
+git fetch origin 2>nul
+git merge --ff-only origin/main 2>nul
+.venv\Scripts\python.exe -m enhanced_rlm.server %*
+```
+
+Then configure `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "enhanced-rlm": {
       "type": "stdio",
-      "command": "C:\\path\\to\\cc-mpc-extended-rlm\\.venv\\Scripts\\python.exe",
+      "command": "C:\\path\\to\\cc-mpc-extended-rlm\\start_server.bat",
       "args": [
-        "-m",
-        "enhanced_rlm.server",
         "--path",
         "C:\\path\\to\\your\\project"
       ],
@@ -173,7 +193,66 @@ For projects located on Windows filesystem (not WSL):
 }
 ```
 
-The server will automatically read `ANTHROPIC_API_KEY` from Windows environment variables.
+### Legacy Configuration (Without Auto-Sync)
+
+If you prefer manual updates, you can still use the Python module directly:
+
+<details>
+<summary>Click to expand legacy configuration</summary>
+
+**Linux/macOS:**
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "/path/to/cc-mpc-extended-rlm/.venv/bin/python",
+      "args": ["-m", "enhanced_rlm.server", "--path", "/path/to/your/project"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Windows + WSL:**
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "wsl.exe",
+      "args": ["bash", "-lc", "/path/to/cc-mpc-extended-rlm/.venv/bin/python -m enhanced_rlm.server --path /path/to/your/project"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Windows Native:**
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "C:\\path\\to\\cc-mpc-extended-rlm\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "enhanced_rlm.server", "--path", "C:\\path\\to\\your\\project"],
+      "env": {}
+    }
+  }
+}
+```
+
+</details>
+
+### Migrating Existing Projects
+
+To update an existing project to use auto-sync:
+
+1. Update your `.mcp.json` to use `start_server.sh` instead of calling Python directly
+2. Reload VS Code window (`Ctrl+Shift+P` → "Developer: Reload Window")
+3. The MCP server will now auto-sync on every reload
+
+The server will automatically read `ANTHROPIC_API_KEY` from environment variables.
 
 ### Auto-approve MCP tools (optional)
 
