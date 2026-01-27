@@ -33,10 +33,10 @@ Claude Haiku 3.5 API      <- Smart filtering and distillation (requires API key)
 - `ripgrep` installed (`rg` command available)
 - Anthropic API key (for Haiku distillation - optional but recommended)
 
-### Install ripgrep
+### Step 1: Install ripgrep
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian (WSL included)
 sudo apt install ripgrep
 
 # macOS
@@ -46,26 +46,66 @@ brew install ripgrep
 winget install BurntSushi.ripgrep.MSVC
 ```
 
-### Install the MCP server
+### Step 2: Clone and install the MCP server
 
 ```bash
+# Clone the repository
 git clone https://github.com/lukiies/cc-mpc-extended-rlm.git
 cd cc-mpc-extended-rlm
 
 # Create virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# or: .venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/macOS/WSL
+# or: .venv\Scripts\activate  # Windows PowerShell
 
-# Install
+# Install the package
 pip install -e .
+```
+
+### Step 3: Set up Anthropic API Key
+
+The API key should be stored in your system environment (NOT in config files) for security.
+
+#### For WSL/Linux users:
+
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
+```
+
+Then reload:
+```bash
+source ~/.bashrc
+```
+
+#### For Windows users:
+
+**Option A: Via PowerShell (recommended)**
+```powershell
+[Environment]::SetEnvironmentVariable('ANTHROPIC_API_KEY', 'sk-ant-api03-your-key-here', 'User')
+```
+
+**Option B: Via GUI**
+1. Press `Win + R`, type `sysdm.cpl`, press Enter
+2. Go to "Advanced" tab → "Environment Variables"
+3. Under "User variables", click "New"
+4. Variable name: `ANTHROPIC_API_KEY`
+5. Variable value: `sk-ant-api03-your-key-here`
+6. Click OK and restart VS Code
+
+#### For macOS users:
+
+Add to your `~/.zshrc`:
+```bash
+export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
 ```
 
 ## Configuration
 
-### Option 1: Linux/macOS (Native)
+Create a `.mcp.json` file in your project root. Choose the configuration that matches your setup:
 
-Create `.mcp.json` in your project root:
+### Option 1: Linux/macOS (Native)
 
 ```json
 {
@@ -79,17 +119,15 @@ Create `.mcp.json` in your project root:
         "--path",
         "/path/to/your/project"
       ],
-      "env": {
-        "ANTHROPIC_API_KEY": "sk-ant-api03-..."
-      }
+      "env": {}
     }
   }
 }
 ```
 
-### Option 2: Windows with WSL (Recommended for WSL projects)
+### Option 2: Windows + WSL Projects (Recommended)
 
-If your project is in WSL but Claude Code runs on Windows, use this configuration:
+If your project is in WSL but VS Code/Claude Code runs on Windows:
 
 ```json
 {
@@ -99,8 +137,8 @@ If your project is in WSL but Claude Code runs on Windows, use this configuratio
       "command": "wsl.exe",
       "args": [
         "bash",
-        "-c",
-        "ANTHROPIC_API_KEY='sk-ant-api03-...' /path/to/cc-mpc-extended-rlm/.venv/bin/python -m enhanced_rlm.server --path /path/to/your/project"
+        "-lc",
+        "/path/to/cc-mpc-extended-rlm/.venv/bin/python -m enhanced_rlm.server --path /path/to/your/project"
       ],
       "env": {}
     }
@@ -108,11 +146,11 @@ If your project is in WSL but Claude Code runs on Windows, use this configuratio
 }
 ```
 
-**Note**: Environment variables in the `env` block don't pass through `wsl.exe`, so the API key must be set inline in the bash command.
+**Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.bashrc`).
 
-### Option 3: Windows Native
+### Option 3: Windows Native Projects
 
-For native Windows projects (not in WSL):
+For projects located on Windows filesystem (not WSL):
 
 ```json
 {
@@ -126,13 +164,13 @@ For native Windows projects (not in WSL):
         "--path",
         "C:\\path\\to\\your\\project"
       ],
-      "env": {
-        "ANTHROPIC_API_KEY": "sk-ant-api03-..."
-      }
+      "env": {}
     }
   }
 }
 ```
+
+The server will automatically read `ANTHROPIC_API_KEY` from Windows environment variables.
 
 ### Auto-approve MCP tools (optional)
 
@@ -253,18 +291,21 @@ ruff check src/
 
 ### Haiku distillation not working
 
-1. Verify `ANTHROPIC_API_KEY` is set correctly
-2. For WSL: API key must be in the bash command, not in `env` block
-3. Check if you have API credits available
+1. Verify `ANTHROPIC_API_KEY` is set in your environment:
+   - WSL/Linux: `echo $ANTHROPIC_API_KEY`
+   - Windows PowerShell: `$env:ANTHROPIC_API_KEY`
+2. For WSL: ensure you're using `-lc` flag (not `-c`) to load bash profile
+3. Check if you have API credits available at https://console.anthropic.com
 
 ### WSL path issues
 
 - Use native Linux paths (e.g., `/home/user/project`)
 - Don't use Windows UNC paths (`\\wsl.localhost\...`) in the `--path` argument
+- The `-lc` flag is required for WSL to load environment variables from `~/.bashrc`
 
 ## Token Usage Statistics
 
-Currently, the server does not track token usage statistics. Haiku API usage can be monitored through your Anthropic dashboard.
+Currently, the server does not track token usage statistics. Haiku API usage can be monitored through your [Anthropic dashboard](https://console.anthropic.com).
 
 Future enhancement: Add token tracking and reporting.
 
@@ -272,10 +313,17 @@ Future enhancement: Add token tracking and reporting.
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Linux | Full support | Native ripgrep |
-| macOS | Full support | Native ripgrep |
-| Windows (native) | Full support | Requires ripgrep installation |
-| Windows + WSL | Full support | Use `wsl.exe bash -c` wrapper |
+| Linux | Full support | Native ripgrep, env vars from shell profile |
+| macOS | Full support | Native ripgrep, env vars from shell profile |
+| Windows (native) | Full support | ripgrep via winget, env vars from Windows User Environment |
+| Windows + WSL | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.bashrc` |
+
+## Security Notes
+
+- **Never commit API keys** to version control
+- Store `ANTHROPIC_API_KEY` in system environment variables only
+- The `.mcp.json` file can be committed if it doesn't contain secrets (using `-lc` approach)
+- Add `.mcp.json` to `.gitignore` if you prefer to keep it private
 
 ## License
 
