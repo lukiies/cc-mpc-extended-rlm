@@ -8,6 +8,42 @@ This guide helps you transform any project into a well-organized knowledge base 
 
 **Every CLAUDE.md file MUST start with a scope definition header.** This header ensures the rules are only applied when relevant to the specific project, preventing confusion in multi-project environments.
 
+### Self-Learning Protocol (Recommended)
+
+Immediately after the scope header, include the **Self-Learning Protocol** section. This enables Claude to automatically improve your knowledge base after successful task completions:
+
+```markdown
+## Self-Learning Protocol
+
+**After completing tasks with 100% success** (all tests pass, no errors, user confirms satisfaction), you MUST:
+
+1. **Analyze the session** for lessons learned:
+   - New patterns or solutions discovered
+   - Gotchas encountered and resolved
+   - Effective approaches worth preserving
+   - Mistakes made and how they were fixed
+
+2. **Route updates to the appropriate target:**
+
+   | Lesson Type | Target Location | Examples |
+   |-------------|-----------------|----------|
+   | Project-specific | This project's `.claude/` folder | API quirks, framework gotchas, project conventions |
+   | Universal/reusable | `cc-mcp-extended-rlm` repository | General coding patterns, tool usage tips, universal best practices |
+   | Agent template improvement | Agent's `examples/CLAUDE.md` | Better rule phrasing, new section structure |
+
+3. **Update concisely:**
+   - Add to `TROUBLESHOOTING.md` for problems and solutions
+   - Add to `REFERENCE.md` for patterns and conventions
+   - Add to `code_examples/` for reusable code snippets
+   - Update `CLAUDE.md` only for critical new rules
+
+4. **Skip if no meaningful lessons** - Not every session produces learnings worth preserving.
+
+5. **For cc-mcp-extended-rlm updates:** When lessons are project-agnostic and valuable for other projects, update the agent repository.
+```
+
+This creates a continuous improvement loop where your knowledge base gets smarter with each successful session.
+
 ### Required Header Template
 
 ```markdown
@@ -160,7 +196,21 @@ Please help me:
    ---
    ```
 
-   After the header, CLAUDE.md should contain ONLY:
+   After the scope header, add the **Self-Learning Protocol** section:
+   ```markdown
+   ## Self-Learning Protocol
+
+   **After completing tasks with 100% success** (all tests pass, no errors, user confirms satisfaction), you MUST:
+
+   1. **Analyze the session** for lessons learned
+   2. **Route updates appropriately:**
+      - Project-specific → `.claude/` folder
+      - Universal/reusable → `cc-mcp-extended-rlm` repository
+   3. **Update concisely** - TROUBLESHOOTING.md, REFERENCE.md, or code_examples/
+   4. **Skip if no meaningful lessons**
+   ```
+
+   After these required sections, CLAUDE.md should contain ONLY:
    - Critical rules that MUST be followed
    - Build/run commands
    - Key gotchas (max 10)
@@ -411,6 +461,7 @@ If you have both but they're disorganized:
 After setup, verify:
 
 - [ ] `CLAUDE.md` starts with scope definition header (Project Rules - Scope Definition)
+- [ ] `CLAUDE.md` includes Self-Learning Protocol section (after scope header)
 - [ ] `CLAUDE.md` is under 200 lines (including header)
 - [ ] Scope header has customized project name, tech stack, and domain
 - [ ] `.claude/REFERENCE.md` contains detailed docs

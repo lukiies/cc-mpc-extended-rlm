@@ -10,6 +10,7 @@ An MCP (Model Context Protocol) server that provides intelligent, token-efficien
 - **Response Caching**: Caches Haiku responses for 1 hour to reduce API calls
 - **Workspace-Specific**: Each project uses its own `CLAUDE.md` and `.claude/` folder
 - **Cross-Platform**: Works on Linux, macOS, and Windows (including WSL)
+- **Self-Learning Protocol**: Built-in rules for Claude to update knowledge base after successful task completions
 
 ## Architecture
 
@@ -228,6 +229,42 @@ Every CLAUDE.md **MUST** start with a scope definition header:
 ```
 
 This ensures rules are only applied when relevant to the specific project.
+
+### Self-Learning Protocol (Required)
+
+Every CLAUDE.md **SHOULD** include the Self-Learning Protocol section immediately after the scope header. This enables Claude to automatically improve the knowledge base over time:
+
+```markdown
+## Self-Learning Protocol
+
+**After completing tasks with 100% success** (all tests pass, no errors, user confirms satisfaction), you MUST:
+
+1. **Analyze the session** for lessons learned:
+   - New patterns or solutions discovered
+   - Gotchas encountered and resolved
+   - Effective approaches worth preserving
+   - Mistakes made and how they were fixed
+
+2. **Route updates to the appropriate target:**
+
+   | Lesson Type | Target Location | Examples |
+   |-------------|-----------------|----------|
+   | Project-specific | This project's `.claude/` folder | API quirks, framework gotchas, project conventions |
+   | Universal/reusable | `cc-mcp-extended-rlm` repository | General coding patterns, tool usage tips, universal best practices |
+   | Agent template improvement | Agent's `examples/CLAUDE.md` | Better rule phrasing, new section structure |
+
+3. **Update concisely:**
+   - Add to `TROUBLESHOOTING.md` for problems and solutions
+   - Add to `REFERENCE.md` for patterns and conventions
+   - Add to `code_examples/` for reusable code snippets
+   - Update `CLAUDE.md` only for critical new rules
+
+4. **Skip if no meaningful lessons** - Not every session produces learnings worth preserving.
+
+5. **For cc-mcp-extended-rlm updates:** When lessons are project-agnostic and valuable for other projects, update the agent repository.
+```
+
+This creates a feedback loop where Claude improves both project-specific documentation and the agent itself based on real-world usage.
 
 ### Supported file types in knowledge base
 
