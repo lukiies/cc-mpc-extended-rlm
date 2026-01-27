@@ -68,15 +68,17 @@ The API key should be stored in your system environment (NOT in config files) fo
 
 #### For WSL/Linux users:
 
-Add to your `~/.bashrc` or `~/.zshrc`:
+Add to your `~/.profile` (recommended for WSL) or `~/.zshrc`:
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
 ```
 
+**Important for WSL**: Use `~/.profile` instead of `~/.bashrc`. The `.bashrc` file typically exits early for non-interactive shells, which prevents the API key from being loaded when using `bash -lc`.
+
 Then reload:
 ```bash
-source ~/.bashrc
+source ~/.profile
 ```
 
 #### For Windows users:
