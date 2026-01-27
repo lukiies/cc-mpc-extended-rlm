@@ -148,7 +148,7 @@ If your project is in WSL but VS Code/Claude Code runs on Windows:
 }
 ```
 
-**Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.bashrc`).
+**Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.profile`).
 
 ### Option 3: Windows Native Projects
 
@@ -209,6 +209,15 @@ your-project/
 
 - Markdown: `*.md`
 - Source code: `*.prg`, `*.c`, `*.h`, `*.ch`, `*.py`
+
+### Setting up your knowledge base
+
+For detailed instructions on transforming any project into an optimized knowledge base structure, see the [Knowledge Base Setup Guide](docs/KNOWLEDGE_BASE_SETUP_GUIDE.md). This guide includes:
+
+- Quick assessment of your current state
+- A complete prompt to paste into Claude Code for automated setup
+- Detailed transformation steps for different scenarios
+- Best practices for organizing documentation
 
 ## Available MCP Tools
 
@@ -303,7 +312,7 @@ ruff check src/
 
 - Use native Linux paths (e.g., `/home/user/project`)
 - Don't use Windows UNC paths (`\\wsl.localhost\...`) in the `--path` argument
-- The `-lc` flag is required for WSL to load environment variables from `~/.bashrc`
+- The `-lc` flag is required for WSL to load environment variables from `~/.profile`
 
 ## Token Usage Statistics
 
@@ -318,7 +327,7 @@ Future enhancement: Add token tracking and reporting.
 | Linux | Full support | Native ripgrep, env vars from shell profile |
 | macOS | Full support | Native ripgrep, env vars from shell profile |
 | Windows (native) | Full support | ripgrep via winget, env vars from Windows User Environment |
-| Windows + WSL | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.bashrc` |
+| Windows + WSL | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.profile` |
 
 ## Security Notes
 
