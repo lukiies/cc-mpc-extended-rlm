@@ -2,6 +2,96 @@
 
 This guide helps you transform any project into a well-organized knowledge base that works optimally with the Enhanced RLM MCP server.
 
+---
+
+## CRITICAL: CLAUDE.md Scope Header
+
+**Every CLAUDE.md file MUST start with a scope definition header.** This header ensures the rules are only applied when relevant to the specific project, preventing confusion in multi-project environments.
+
+### Required Header Template
+
+```markdown
+# Project Rules - Scope Definition
+
+**IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+- Files in this workspace ([PROJECT_NAME] codebase)
+- Code in the [REPO_NAME] repository
+- Development tasks for [PROJECT_NAME]
+- [PRIMARY_TECH_STACK], or project-specific patterns
+- [PROJECT_DOMAIN_DESCRIPTION]
+
+**These rules DO NOT apply to general questions unrelated to this project.**
+
+---
+```
+
+### Customization Instructions
+
+When setting up a new project, Claude Code should automatically:
+
+1. **Replace placeholders** with project-specific values:
+   - `[PROJECT_NAME]` - The name of the project (e.g., "eFakt2", "SoftWork Professional")
+   - `[REPO_NAME]` - The repository name (e.g., "efakt2", "cvs_ls26")
+   - `[PRIMARY_TECH_STACK]` - Main technologies (e.g., "ASP.NET Core, React/TypeScript", "ITK-Clip/Harbour, Sybase")
+   - `[PROJECT_DOMAIN_DESCRIPTION]` - Brief domain context (e.g., "Polish KSeF invoice integration", "Financial software for LSP market")
+
+2. **Auto-detect from project** when possible:
+   - Read `package.json`, `*.csproj`, `Cargo.toml`, etc. for tech stack
+   - Read existing README.md for project description
+   - Use folder name as fallback project name
+
+### Example Headers
+
+**For a .NET + React project:**
+```markdown
+# Project Rules - Scope Definition
+
+**IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+- Files in this workspace (eFakt2 codebase)
+- Code in the efakt2 repository
+- Development tasks for eFakt2 KSeF integration
+- ASP.NET Core, React/TypeScript, or project-specific patterns
+- Polish KSeF (National e-Invoice System) integration
+
+**These rules DO NOT apply to general questions unrelated to this project.**
+
+---
+```
+
+**For a Harbour/xBase project:**
+```markdown
+# Project Rules - Scope Definition
+
+**IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+- Files in this workspace (SoftWork Professional codebase)
+- Code in the cvs_ls26 repository
+- Development tasks for SoftWork Professional
+- ITK-Clip/Harbour, Sybase, or project-specific patterns
+- Financial/accounting software for the LSP market
+
+**These rules DO NOT apply to general questions unrelated to this project.**
+
+---
+```
+
+**For a Python project:**
+```markdown
+# Project Rules - Scope Definition
+
+**IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+- Files in this workspace (DataProcessor codebase)
+- Code in the data-processor repository
+- Development tasks for DataProcessor
+- Python, pandas, FastAPI, or project-specific patterns
+- ETL pipeline and data transformation tasks
+
+**These rules DO NOT apply to general questions unrelated to this project.**
+
+---
+```
+
+---
+
 ## Quick Assessment
 
 First, identify your current state:
@@ -35,16 +125,42 @@ Please help me:
    ```
    project/
    ├── CLAUDE.md              <- Essential rules only (max 200 lines)
+   │                             MUST start with scope header (see above)
    └── .claude/
        ├── REFERENCE.md       <- Detailed patterns, conventions, API docs
-       ├── code_examples/     <- Reusable code snippets by category
-       │   ├── <category1>.ext
-       │   └── <category2>.ext
+       ├── code_examples/     <- Reusable code snippets organized by language
+       │   ├── csharp/        <- C# examples (.cs files)
+       │   ├── typescript/    <- TypeScript examples (.ts, .tsx files)
+       │   ├── python/        <- Python examples (.py files)
+       │   ├── sql/           <- SQL examples (.sql files)
+       │   ├── powershell/    <- PowerShell examples (.ps1 files)
+       │   ├── bash/          <- Bash/shell examples (.sh files)
+       │   └── [language]/    <- Other languages as needed
        └── [topic docs].md    <- Specific topics (architecture, deployment, etc.)
    ```
 
-3. **CLAUDE.md Should Contain ONLY:**
-   - Project scope definition (when rules apply)
+   **Note:** Use language-specific subfolders in `code_examples/` to keep snippets organized.
+   This makes it easier to find relevant examples and prevents a flat, mixed folder.
+
+3. **CLAUDE.md MUST Start With Scope Header:**
+
+   The VERY FIRST content in CLAUDE.md must be the scope definition:
+   ```markdown
+   # Project Rules - Scope Definition
+
+   **IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+   - Files in this workspace ([PROJECT_NAME] codebase)
+   - Code in the [REPO_NAME] repository
+   - Development tasks for [PROJECT_NAME]
+   - [PRIMARY_TECH_STACK], or project-specific patterns
+   - [PROJECT_DOMAIN_DESCRIPTION]
+
+   **These rules DO NOT apply to general questions unrelated to this project.**
+
+   ---
+   ```
+
+   After the header, CLAUDE.md should contain ONLY:
    - Critical rules that MUST be followed
    - Build/run commands
    - Key gotchas (max 10)
@@ -57,10 +173,17 @@ Please help me:
    - Architecture details
    - Function signatures and patterns
 
-5. **Create .claude/code_examples/:**
-   - Extract code snippets from documentation
-   - Organize by language/purpose
+5. **Create .claude/code_examples/ with Language Subfolders:**
+   - Create subfolders for each language used in the project:
+     - `csharp/` for `.cs` files
+     - `typescript/` for `.ts`, `.tsx` files
+     - `python/` for `.py` files
+     - `sql/` for `.sql` files
+     - `powershell/` for `.ps1` files
+     - `bash/` for `.sh` files
+   - Extract code snippets from documentation into appropriate subfolders
    - Add header comments explaining each example
+   - Use descriptive filenames: `database_patterns.cs`, `api_handlers.ts`
 
 6. **Set Up MCP Configuration**
 
@@ -99,13 +222,30 @@ Please start by analyzing my current project state and propose a transformation 
 
 If your project has no documentation:
 
-1. **Create `.claude/` folder**
-2. **Create `CLAUDE.md`** with:
-   ```markdown
-   # [Project Name] - Essential Rules
+1. **Create `.claude/` folder** with language subfolders:
+   ```
+   .claude/
+   ├── code_examples/
+   │   ├── csharp/       # If project uses C#
+   │   ├── typescript/   # If project uses TypeScript
+   │   ├── python/       # If project uses Python
+   │   └── [language]/   # Other languages as needed
+   ```
 
-   ## Scope
-   These rules apply when working with files in this project.
+2. **Create `CLAUDE.md`** with scope header FIRST:
+   ```markdown
+   # Project Rules - Scope Definition
+
+   **IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+   - Files in this workspace ([PROJECT_NAME] codebase)
+   - Code in the [REPO_NAME] repository
+   - Development tasks for [PROJECT_NAME]
+   - [PRIMARY_TECH_STACK], or project-specific patterns
+   - [PROJECT_DOMAIN_DESCRIPTION]
+
+   **These rules DO NOT apply to general questions unrelated to this project.**
+
+   ---
 
    ## Build & Run
    - Build: `[command]`
@@ -127,21 +267,35 @@ If your project has no documentation:
 
 If you have everything in one large file:
 
-1. **Keep in CLAUDE.md** (first ~100-200 lines):
-   - Scope definition
+1. **Add scope header as FIRST content** in CLAUDE.md:
+   ```markdown
+   # Project Rules - Scope Definition
+
+   **IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+   - Files in this workspace ([PROJECT_NAME] codebase)
+   - [... customize for your project ...]
+
+   **These rules DO NOT apply to general questions unrelated to this project.**
+
+   ---
+   ```
+
+2. **Keep in CLAUDE.md** (after header, ~100-150 lines max):
    - Build commands
    - Critical rules only
    - Key gotchas (condensed)
+   - Links to .claude/ folder
 
-2. **Move to `.claude/REFERENCE.md`**:
+3. **Move to `.claude/REFERENCE.md`**:
    - Code conventions (detailed)
    - API documentation
    - Database patterns
    - Architecture explanations
 
-3. **Move to `.claude/code_examples/`**:
+4. **Move to `.claude/code_examples/[language]/`**:
+   - Create subfolders for each language
    - All code blocks longer than 10 lines
-   - Name files by purpose: `database_patterns.cs`, `api_examples.py`
+   - Name files by purpose: `csharp/database_patterns.cs`, `python/api_examples.py`
 
 ### State C: Exists but Unstructured
 
@@ -256,9 +410,11 @@ If you have both but they're disorganized:
 
 After setup, verify:
 
-- [ ] `CLAUDE.md` is under 200 lines
+- [ ] `CLAUDE.md` starts with scope definition header (Project Rules - Scope Definition)
+- [ ] `CLAUDE.md` is under 200 lines (including header)
+- [ ] Scope header has customized project name, tech stack, and domain
 - [ ] `.claude/REFERENCE.md` contains detailed docs
-- [ ] `.claude/code_examples/` has organized snippets
+- [ ] `.claude/code_examples/` has language-specific subfolders (e.g., `csharp/`, `typescript/`)
 - [ ] `.mcp.json` is in project root (no secrets!)
 - [ ] `.claude/settings.json` has auto-approve permissions
 - [ ] MCP server shows "connected" after VS Code restart
@@ -304,22 +460,26 @@ CLAUDE.md (800 lines)
 
 **After** (optimized structure):
 ```
-CLAUDE.md (80 lines)
-├── Scope definition (10 lines)
+CLAUDE.md (100 lines)
+├── Scope definition header (15 lines)  <- MUST be first!
 ├── Build/run commands (15 lines)
-├── Key rules (25 lines)
-├── Quick gotchas (20 lines)
-└── Links to .claude/ docs (10 lines)
+├── Key rules (30 lines)
+├── Quick gotchas (25 lines)
+└── Links to .claude/ docs (15 lines)
 
 .claude/
 ├── REFERENCE.md (400 lines)
 │   ├── Code conventions
 │   ├── Database patterns
 │   └── API documentation
-├── code_examples/
-│   ├── database_queries.sql
-│   ├── api_handlers.cs
-│   └── validation_patterns.cs
+├── code_examples/           <- Language-specific subfolders
+│   ├── csharp/
+│   │   ├── database_patterns.cs
+│   │   └── validation_patterns.cs
+│   ├── typescript/
+│   │   └── api_handlers.ts
+│   └── sql/
+│       └── database_queries.sql
 └── TROUBLESHOOTING.md (120 lines)
 ```
 

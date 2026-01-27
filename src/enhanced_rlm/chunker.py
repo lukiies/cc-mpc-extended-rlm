@@ -47,6 +47,33 @@ class Chunker:
         r"^\s*(?:async\s+)?def\s+(\w+)\s*\(",
         re.MULTILINE
     )
+    # C# methods and classes
+    CSHARP_PATTERN = re.compile(
+        r"^\s*(?:public|private|protected|internal|static|async|virtual|override|\s)*"
+        r"(?:class|void|Task|async\s+Task|string|int|bool|IActionResult|\w+<[^>]+>|\w+)\s+"
+        r"(\w+)\s*(?:<[^>]+>)?\s*[\(\{]",
+        re.MULTILINE
+    )
+    # TypeScript/JavaScript functions
+    TS_FUNCTION_PATTERN = re.compile(
+        r"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(",
+        re.MULTILINE
+    )
+    # SQL stored procedures and functions
+    SQL_PATTERN = re.compile(
+        r"^\s*(?:CREATE\s+)?(?:PROCEDURE|FUNCTION|PROC)\s+(?:\w+\.)?(\w+)",
+        re.IGNORECASE | re.MULTILINE
+    )
+    # PowerShell functions
+    PS_FUNCTION_PATTERN = re.compile(
+        r"^\s*function\s+(\w+(?:-\w+)*)\s*(?:\([^)]*\))?\s*\{",
+        re.IGNORECASE | re.MULTILINE
+    )
+    # Bash functions
+    BASH_FUNCTION_PATTERN = re.compile(
+        r"^\s*(?:function\s+)?(\w+)\s*\(\s*\)\s*\{",
+        re.MULTILINE
+    )
 
     def __init__(self, chunk_size: int = 500):
         """
@@ -65,10 +92,20 @@ class Chunker:
             return "markdown"
         elif suffix in (".prg", ".ch"):
             return "clipper"
-        elif suffix in (".c", ".h"):
+        elif suffix in (".c", ".h", ".cpp", ".hpp"):
             return "c"
         elif suffix == ".py":
             return "python"
+        elif suffix == ".cs":
+            return "csharp"
+        elif suffix in (".ts", ".tsx", ".js", ".jsx"):
+            return "typescript"
+        elif suffix == ".sql":
+            return "sql"
+        elif suffix == ".ps1":
+            return "powershell"
+        elif suffix == ".sh":
+            return "bash"
         else:
             return "text"
 
@@ -211,6 +248,16 @@ class Chunker:
             return self.chunk_code(content, file_path, self.C_FUNCTION_PATTERN)
         elif file_type == "python":
             return self.chunk_code(content, file_path, self.PYTHON_FUNCTION_PATTERN)
+        elif file_type == "csharp":
+            return self.chunk_code(content, file_path, self.CSHARP_PATTERN)
+        elif file_type == "typescript":
+            return self.chunk_code(content, file_path, self.TS_FUNCTION_PATTERN)
+        elif file_type == "sql":
+            return self.chunk_code(content, file_path, self.SQL_PATTERN)
+        elif file_type == "powershell":
+            return self.chunk_code(content, file_path, self.PS_FUNCTION_PATTERN)
+        elif file_type == "bash":
+            return self.chunk_code(content, file_path, self.BASH_FUNCTION_PATTERN)
         else:
             # Default: return whole file as single chunk
             lines = content.split("\n")

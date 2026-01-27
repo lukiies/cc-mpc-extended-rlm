@@ -196,14 +196,38 @@ The server searches a two-level knowledge base in your project:
 
 ```
 your-project/
-├── CLAUDE.md              <- PRIMARY: Main rules file (always searched first)
+├── CLAUDE.md              <- PRIMARY: Main rules file (MUST start with scope header)
 └── .claude/               <- SECONDARY: Detailed documentation
     ├── REFERENCE.md       <- Detailed patterns and conventions
-    ├── code_examples/     <- Reusable code snippets
-    │   ├── example1.py
-    │   └── example2.js
+    ├── code_examples/     <- Reusable code snippets by language
+    │   ├── python/        <- Python examples
+    │   │   └── example.py
+    │   ├── typescript/    <- TypeScript examples
+    │   │   └── example.ts
+    │   └── [language]/    <- Other languages as needed
     └── [other docs].md
 ```
+
+### CLAUDE.md Scope Header (Required)
+
+Every CLAUDE.md **MUST** start with a scope definition header:
+
+```markdown
+# Project Rules - Scope Definition
+
+**IMPORTANT: These rules apply ONLY when the user's question or task relates to:**
+- Files in this workspace ([PROJECT_NAME] codebase)
+- Code in the [REPO_NAME] repository
+- Development tasks for [PROJECT_NAME]
+- [PRIMARY_TECH_STACK], or project-specific patterns
+- [PROJECT_DOMAIN_DESCRIPTION]
+
+**These rules DO NOT apply to general questions unrelated to this project.**
+
+---
+```
+
+This ensures rules are only applied when relevant to the specific project.
 
 ### Supported file types in knowledge base
 

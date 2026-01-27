@@ -36,8 +36,20 @@ class KnowledgeBaseConfig:
     # .claude/ folder contains detailed documentation
     docs_folder: str = ".claude"
     # File patterns to include in search
+    # Supports: Markdown, Python, C/C++, Harbour/xBase, C#, TypeScript/JavaScript, SQL, PowerShell, Bash
     file_patterns: list[str] = field(
-        default_factory=lambda: ["*.md", "*.prg", "*.c", "*.py", "*.h", "*.ch"]
+        default_factory=lambda: [
+            "*.md",           # Markdown documentation
+            "*.py",           # Python
+            "*.prg", "*.ch",  # Harbour/xBase
+            "*.c", "*.h",     # C/C++
+            "*.cs",           # C#
+            "*.ts", "*.tsx",  # TypeScript
+            "*.js", "*.jsx",  # JavaScript
+            "*.sql",          # SQL
+            "*.ps1",          # PowerShell
+            "*.sh",           # Bash/Shell
+        ]
     )
     # Patterns to exclude
     exclude_patterns: list[str] = field(

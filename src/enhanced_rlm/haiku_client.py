@@ -219,7 +219,16 @@ Always include source file references when citing specific information."""
                 max_tokens=token_budget,
                 messages=[{"role": "user", "content": prompt}],
             )
-            result_content = response.content[0].text
+
+            # Safely extract response content
+            result_content = ""
+            if response.content and len(response.content) > 0:
+                text = response.content[0].text
+                if text is not None:
+                    result_content = text.strip()
+
+            if not result_content:
+                result_content = "No relevant information extracted from knowledge base."
 
             # Cache the response
             if use_cache:

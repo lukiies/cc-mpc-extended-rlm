@@ -138,4 +138,8 @@ class TestSearchResult:
             match_text="test",
         )
 
-        assert "/test/file.md:42: test content" in str(result)
+        str_repr = str(result)
+        # Platform-agnostic: check for file name and line number
+        assert "file.md" in str_repr
+        assert "42" in str_repr
+        assert "test content" in str_repr

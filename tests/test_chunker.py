@@ -148,6 +148,7 @@ class TestChunkDataclass:
         )
 
         str_repr = str(chunk)
-        assert "/test.md" in str_repr
+        # Platform-agnostic: check for file name, not full path with slashes
+        assert "test.md" in str_repr
         assert "10-20" in str_repr
         assert "Test Section" in str_repr
