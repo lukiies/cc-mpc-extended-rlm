@@ -1,11 +1,12 @@
 #!/bin/bash
 # =============================================================================
-# Enhanced RLM MCP Server - Auto-Sync Launcher
+# Enhanced RLM MCP Server - Auto-Pull Launcher
 # =============================================================================
 # This script ensures the MCP server is always running the latest version by:
-# 1. Committing and pushing any local changes (from self-learning protocol)
-# 2. Pulling the latest changes from GitHub
-# 3. Starting the MCP server
+# 1. Pulling the latest changes from GitHub
+# 2. Starting the MCP server
+#
+# Note: Push happens when user accepts self-learning updates during session
 #
 # Usage: ./start_server.sh --path /path/to/your/project
 # =============================================================================
@@ -29,48 +30,11 @@ fi
 log "=== MCP Server startup initiated ==="
 
 # -----------------------------------------------------------------------------
-# Step 1: Commit and push any local changes (self-learning protocol updates)
-# -----------------------------------------------------------------------------
-sync_local_changes() {
-    # Check if we're in a git repository
-    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-        log "WARNING: Not a git repository, skipping sync"
-        return 0
-    fi
-
-    # Check for uncommitted changes
-    if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
-        log "Found local changes, committing..."
-
-        # Stage all changes
-        git add -A
-
-        # Create commit with auto-generated message
-        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-        local hostname=$(hostname 2>/dev/null || echo "unknown")
-        git commit -m "Auto-sync: Self-learning updates from $hostname at $timestamp" \
-                   -m "Automated commit by start_server.sh" \
-                   --author="Claude Code Auto-Sync <noreply@anthropic.com>" 2>/dev/null || {
-            log "WARNING: Commit failed (possibly no changes to commit)"
-        }
-
-        # Push to remote
-        if git push origin HEAD 2>/dev/null; then
-            log "Successfully pushed local changes to GitHub"
-        else
-            log "WARNING: Push failed - will retry on next startup"
-            # Don't fail - we can still run with local changes
-        fi
-    else
-        log "No local changes to commit"
-    fi
-}
-
-# -----------------------------------------------------------------------------
-# Step 2: Pull latest changes from GitHub
+# Step 1: Pull latest changes from GitHub
 # -----------------------------------------------------------------------------
 pull_latest() {
     if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        log "WARNING: Not a git repository, skipping pull"
         return 0
     fi
 
@@ -93,19 +57,15 @@ pull_latest() {
 }
 
 # -----------------------------------------------------------------------------
-# Step 3: Run the sync operations
+# Step 2: Run the pull operation
 # -----------------------------------------------------------------------------
-log "Starting git sync..."
+log "Starting git pull..."
 
-# First push any local changes
-sync_local_changes
-
-# Then pull latest from remote
 pull_latest
 
-log "Git sync completed, starting MCP server..."
+log "Git pull completed, starting MCP server..."
 
 # -----------------------------------------------------------------------------
-# Step 4: Start the MCP server
+# Step 3: Start the MCP server
 # -----------------------------------------------------------------------------
 exec "$SCRIPT_DIR/.venv/bin/python" -m enhanced_rlm.server "$@"

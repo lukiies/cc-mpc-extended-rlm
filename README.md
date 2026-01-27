@@ -11,7 +11,7 @@ An MCP (Model Context Protocol) server that provides intelligent, token-efficien
 - **Workspace-Specific**: Each project uses its own `CLAUDE.md` and `.claude/` folder
 - **Cross-Platform**: Works on Linux, macOS, and Windows (including WSL)
 - **Self-Learning Protocol**: Built-in rules for Claude to update knowledge base after successful task completions
-- **Auto-Sync on Startup**: Automatically commits local changes, pulls latest from GitHub, ensuring all projects run the same version
+- **Auto-Pull on Startup**: Automatically pulls latest from GitHub on VS Code reload, ensuring all projects run the same version
 
 ## Architecture
 
@@ -109,17 +109,18 @@ export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
 
 Create a `.mcp.json` file in your project root. Choose the configuration that matches your setup.
 
-### Auto-Sync Feature (Recommended)
+### Auto-Pull Feature (Recommended)
 
-The `start_server.sh` wrapper script provides **automatic synchronization** with GitHub on every VS Code reload:
+The `start_server.sh` (Linux/macOS/WSL) and `start_server.bat` (Windows) wrapper scripts provide **automatic updates** from GitHub on every VS Code reload:
 
-1. **Commits and pushes** any local changes (from self-learning protocol)
-2. **Pulls latest changes** from GitHub (updates from other projects)
-3. **Starts the MCP server**
+1. **Pulls latest changes** from GitHub (updates from other projects)
+2. **Starts the MCP server**
+
+**Note:** Push happens when you explicitly accept self-learning updates during a session (not on startup).
 
 This ensures all your projects always run the latest version of the agent without manual intervention.
 
-### Option 1: Linux/macOS (Native) - With Auto-Sync
+### Option 1: Linux/macOS (Native) - With Auto-Pull
 
 ```json
 {
@@ -137,7 +138,7 @@ This ensures all your projects always run the latest version of the agent withou
 }
 ```
 
-### Option 2: Windows + WSL Projects (Recommended) - With Auto-Sync
+### Option 2: Windows + WSL Projects (Recommended) - With Auto-Pull
 
 If your project is in WSL but VS Code/Claude Code runs on Windows:
 
@@ -160,22 +161,19 @@ If your project is in WSL but VS Code/Claude Code runs on Windows:
 
 **Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.profile`).
 
-### Option 3: Windows Native Projects - With Auto-Sync
+### Option 3: Windows Native Projects - With Auto-Pull
 
-For projects located on Windows filesystem (not WSL), create a `start_server.bat` wrapper:
+For projects located on Windows filesystem (not WSL), use the included `start_server.bat`:
 
 ```batch
 @echo off
 cd /d "%~dp0"
-git add -A
-git commit -m "Auto-sync: Self-learning updates" --author="Claude Code Auto-Sync <noreply@anthropic.com>" 2>nul
-git push origin HEAD 2>nul
 git fetch origin 2>nul
 git merge --ff-only origin/main 2>nul
-.venv\Scripts\python.exe -m enhanced_rlm.server %*
+"%~dp0.venv\Scripts\python.exe" -m enhanced_rlm.server %*
 ```
 
-Then configure `.mcp.json`:
+Configure `.mcp.json`:
 
 ```json
 {
@@ -193,7 +191,7 @@ Then configure `.mcp.json`:
 }
 ```
 
-### Legacy Configuration (Without Auto-Sync)
+### Legacy Configuration (Without Auto-Pull)
 
 If you prefer manual updates, you can still use the Python module directly:
 
@@ -246,11 +244,11 @@ If you prefer manual updates, you can still use the Python module directly:
 
 ### Migrating Existing Projects
 
-To update an existing project to use auto-sync:
+To update an existing project to use auto-pull:
 
-1. Update your `.mcp.json` to use `start_server.sh` instead of calling Python directly
+1. Update your `.mcp.json` to use `start_server.sh` (Linux/macOS/WSL) or `start_server.bat` (Windows) instead of calling Python directly
 2. Reload VS Code window (`Ctrl+Shift+P` → "Developer: Reload Window")
-3. The MCP server will now auto-sync on every reload
+3. The MCP server will now auto-pull latest changes on every reload
 
 The server will automatically read `ANTHROPIC_API_KEY` from environment variables.
 
