@@ -245,6 +245,8 @@ class KnowledgeSearch:
                 run_kwargs = {
                     "capture_output": True,
                     "text": True,
+                    "encoding": "utf-8",
+                    "errors": "replace",
                     "timeout": 30,
                 }
                 if not (self._is_windows and self._uses_wsl_path):
@@ -252,8 +254,9 @@ class KnowledgeSearch:
 
                 process = subprocess.run(cmd, **run_kwargs)
 
-                # Parse output
-                for line in process.stdout.strip().split("\n"):
+                # Parse output (handle None stdout)
+                stdout = process.stdout or ""
+                for line in stdout.strip().split("\n"):
                     if not line:
                         continue
 
@@ -352,6 +355,8 @@ class KnowledgeSearch:
                 run_kwargs = {
                     "capture_output": True,
                     "text": True,
+                    "encoding": "utf-8",
+                    "errors": "replace",
                     "timeout": 30,
                 }
                 if not (self._is_windows and self._uses_wsl_path):
@@ -359,7 +364,9 @@ class KnowledgeSearch:
 
                 process = subprocess.run(cmd, **run_kwargs)
 
-                for line in process.stdout.strip().split("\n"):
+                # Parse output (handle None stdout)
+                stdout = process.stdout or ""
+                for line in stdout.strip().split("\n"):
                     if not line:
                         continue
 
