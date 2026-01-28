@@ -163,20 +163,25 @@ Please help me:
    ├── CLAUDE.md              <- Essential rules only (max 200 lines)
    │                             MUST start with scope header (see above)
    └── .claude/
-       ├── REFERENCE.md       <- Detailed patterns, conventions, API docs
+       ├── INDEX.md           <- Topic navigation index
+       ├── topics/            <- MODULAR topic files (<100 lines each)
+       │   ├── encoding.md
+       │   ├── build-system.md
+       │   ├── troubleshooting.md
+       │   └── [topic].md
        ├── code_examples/     <- Reusable code snippets organized by language
        │   ├── csharp/        <- C# examples (.cs files)
        │   ├── typescript/    <- TypeScript examples (.ts, .tsx files)
        │   ├── python/        <- Python examples (.py files)
-       │   ├── sql/           <- SQL examples (.sql files)
-       │   ├── powershell/    <- PowerShell examples (.ps1 files)
-       │   ├── bash/          <- Bash/shell examples (.sh files)
        │   └── [language]/    <- Other languages as needed
-       └── [topic docs].md    <- Specific topics (architecture, deployment, etc.)
+       └── REFERENCE.md       <- (Legacy) or for very large reference tables
    ```
 
-   **Note:** Use language-specific subfolders in `code_examples/` to keep snippets organized.
-   This makes it easier to find relevant examples and prevents a flat, mixed folder.
+   **IMPORTANT - Modular KB Principle:**
+   - Keep topic files SMALL (<100 lines each)
+   - One concept = one file
+   - This enables efficient Haiku extraction (lower token usage)
+   - Use INDEX.md for navigation between topics
 
 3. **CLAUDE.md MUST Start With Scope Header:**
 
@@ -196,7 +201,7 @@ Please help me:
    ---
    ```
 
-   After the scope header, add the **Self-Learning Protocol** section:
+   After the scope header, add **Self-Learning Protocol** and **Mandatory Test Requirement**:
    ```markdown
    ## Self-Learning Protocol
 
@@ -204,10 +209,19 @@ Please help me:
 
    1. **Analyze the session** for lessons learned
    2. **Route updates appropriately:**
-      - Project-specific → `.claude/` folder
+      - Project-specific → `.claude/topics/<topic>.md`
       - Universal/reusable → `cc-mcp-extended-rlm` repository
-   3. **Update concisely** - TROUBLESHOOTING.md, REFERENCE.md, or code_examples/
+   3. **Update using modular topic files** (<100 lines each)
    4. **Skip if no meaningful lessons**
+
+   ## Mandatory Test Requirement
+
+   **Every new feature MUST have a test procedure defined BEFORE development.**
+
+   1. Ask for test scenario if not provided
+   2. Define: steps, expected results, edge cases
+   3. Run test after implementation to verify
+   4. Update knowledge base with practical learnings
    ```
 
    After these required sections, CLAUDE.md should contain ONLY:

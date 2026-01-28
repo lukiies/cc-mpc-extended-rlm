@@ -270,21 +270,26 @@ Add to your project's `.claude/settings.json` to skip approval prompts:
 
 ## Knowledge Base Structure
 
-The server searches a two-level knowledge base in your project:
+The server searches a modular knowledge base in your project:
 
 ```
 your-project/
-├── CLAUDE.md              <- PRIMARY: Main rules file (MUST start with scope header)
+├── CLAUDE.md              <- PRIMARY: Essential rules (MUST start with scope header)
 └── .claude/               <- SECONDARY: Detailed documentation
-    ├── REFERENCE.md       <- Detailed patterns and conventions
+    ├── INDEX.md           <- Topic navigation index
+    ├── topics/            <- MODULAR topic files (<100 lines each!)
+    │   ├── encoding.md
+    │   ├── build-system.md
+    │   ├── troubleshooting.md
+    │   └── [topic].md
     ├── code_examples/     <- Reusable code snippets by language
-    │   ├── python/        <- Python examples
-    │   │   └── example.py
-    │   ├── typescript/    <- TypeScript examples
-    │   │   └── example.ts
-    │   └── [language]/    <- Other languages as needed
-    └── [other docs].md
+    │   ├── python/
+    │   ├── typescript/
+    │   └── [language]/
+    └── REFERENCE.md       <- (Legacy/fallback for large reference tables)
 ```
+
+**Modular KB Principle:** Keep topic files SMALL (<100 lines). One concept = one file. This enables efficient Haiku extraction with lower token usage.
 
 ### CLAUDE.md Scope Header (Required)
 
@@ -326,19 +331,34 @@ Every CLAUDE.md **SHOULD** include the Self-Learning Protocol section immediatel
 
    | Lesson Type | Target Location | Examples |
    |-------------|-----------------|----------|
-   | Project-specific | This project's `.claude/` folder | API quirks, framework gotchas, project conventions |
+   | Project-specific | `.claude/topics/<topic>.md` | API quirks, framework gotchas, project conventions |
    | Universal/reusable | `cc-mcp-extended-rlm` repository | General coding patterns, tool usage tips, universal best practices |
    | Agent template improvement | Agent's `examples/CLAUDE.md` | Better rule phrasing, new section structure |
 
-3. **Update concisely:**
-   - Add to `TROUBLESHOOTING.md` for problems and solutions
-   - Add to `REFERENCE.md` for patterns and conventions
-   - Add to `code_examples/` for reusable code snippets
+3. **Update using modular topic files:**
+   - Add/update topic files in `.claude/topics/` (<100 lines each!)
+   - Add code examples to `.claude/code_examples/`
+   - Update `.claude/INDEX.md` when adding new topics
    - Update `CLAUDE.md` only for critical new rules
 
 4. **Skip if no meaningful lessons** - Not every session produces learnings worth preserving.
 
 5. **For cc-mcp-extended-rlm updates:** When lessons are project-agnostic and valuable for other projects, update the agent repository.
+```
+
+### Mandatory Test Requirement (Required)
+
+Every CLAUDE.md **SHOULD** include the Mandatory Test Requirement section:
+
+```markdown
+## Mandatory Test Requirement
+
+**Every new feature MUST have a test procedure defined BEFORE development.**
+
+1. Ask for test scenario if not provided
+2. Define: steps, expected results, edge cases
+3. Run test after implementation to verify
+4. Update knowledge base with practical learnings
 ```
 
 This creates a feedback loop where Claude improves both project-specific documentation and the agent itself based on real-world usage.

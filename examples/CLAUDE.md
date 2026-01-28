@@ -25,19 +25,48 @@
 
    | Lesson Type | Target Location | Examples |
    |-------------|-----------------|----------|
-   | Project-specific | This project's `.claude/` folder | API quirks, framework gotchas, project conventions |
+   | Project-specific | `.claude/topics/<topic>.md` | API quirks, framework gotchas, project conventions |
    | Universal/reusable | `cc-mcp-extended-rlm` repository | General coding patterns, tool usage tips, universal best practices |
    | Agent template improvement | Agent's `examples/CLAUDE.md` | Better rule phrasing, new section structure |
 
-3. **Update concisely:**
-   - Add to `TROUBLESHOOTING.md` for problems and solutions
-   - Add to `REFERENCE.md` for patterns and conventions
-   - Add to `code_examples/` for reusable code snippets
+3. **Update using modular topic files:**
+   - Add/update topic files in `.claude/topics/` (one topic per file, <100 lines)
+   - Add code examples to `.claude/code_examples/`
+   - Update `.claude/INDEX.md` when adding new topics
    - Update `CLAUDE.md` only for critical new rules
 
 4. **Skip if no meaningful lessons** - Not every session produces learnings worth preserving.
 
-5. **For cc-mcp-extended-rlm updates:** When lessons are project-agnostic and valuable for other projects, locate and update the agent repository (typically in a known path or via git clone from https://github.com/lukiies/cc-mpc-extended-rlm).
+5. **For cc-mcp-extended-rlm updates:** When lessons are project-agnostic and valuable for other projects, locate the agent repository path from `.mcp.json` (look for `start_server.sh` or `enhanced_rlm` path) and update it there.
+
+---
+
+## Mandatory Test Requirement
+
+**CRITICAL: Every new feature MUST have a test procedure defined BEFORE development begins.**
+
+1. **When receiving a new feature request**, ask for or define:
+   - Test scenario (step-by-step verification procedure)
+   - Expected results for each step
+   - Edge cases to verify
+
+2. **If test scenario is missing**, you MUST ask the developer before starting implementation.
+
+3. **Why this matters:**
+   - You can verify your implementation works
+   - You can identify and fix issues before completion
+   - You learn from debugging and update knowledge base
+   - Knowledge grows with practical, verified information
+
+4. **Test procedure template:**
+   ```
+   ## Test: [Feature Name]
+   Prerequisites: [Any setup needed]
+   Steps:
+   1. [Action] → Expected: [Result]
+   2. [Action] → Expected: [Result]
+   Cleanup: [How to reset after test]
+   ```
 
 ---
 
@@ -45,8 +74,12 @@
 
 [PROJECT_NAME] is a [brief description of your project].
 
-**Knowledge Base:** `.claude/REFERENCE.md` contains detailed documentation.
-**Code Examples:** `.claude/code_examples/` contains reusable patterns by language.
+**Knowledge Base Structure (modular - token efficient):**
+- `.claude/INDEX.md` - Topic index with links
+- `.claude/topics/` - Small, focused topic files (<100 lines each)
+- `.claude/code_examples/` - Reusable code patterns by language
+
+Use `mcp__enhanced-rlm__ask_knowledge_base` to query topics efficiently.
 
 ---
 
@@ -79,11 +112,14 @@ npm run build
 2. **Database migrations** - run `npm run migrate` after pulling new changes
 3. **API routes** - all routes start with `/api/v1/`
 
-## Detailed Documentation
+## Knowledge Base
 
 For detailed information, see `.claude/` folder:
-- [REFERENCE.md](.claude/REFERENCE.md) - Full API docs, patterns, schemas
-- [code_examples/](.claude/code_examples/) - Reusable code snippets by language
+- [INDEX.md](.claude/INDEX.md) - Topic navigation
+- [topics/](.claude/topics/) - Modular topic files
+- [code_examples/](.claude/code_examples/) - Reusable code by language
+
+**Modular KB principle:** Keep topic files small (<100 lines) so Haiku can extract relevant info efficiently. One concept = one file.
 
 ---
 
