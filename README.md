@@ -262,7 +262,9 @@ Add to your project's `.claude/settings.json` to skip approval prompts:
     "allow": [
       "mcp__enhanced-rlm__ask_knowledge_base",
       "mcp__enhanced-rlm__list_knowledge_base",
-      "mcp__enhanced-rlm__clear_knowledge_cache"
+      "mcp__enhanced-rlm__clear_knowledge_cache",
+      "mcp__enhanced-rlm__get_kb_session_stats",
+      "mcp__enhanced-rlm__reset_kb_session_stats"
     ]
   }
 }
@@ -401,6 +403,16 @@ List the structure of the knowledge base (files and sizes).
 
 Clear the Haiku response cache (useful after updating documentation).
 
+### `get_kb_session_stats()`
+
+Get accumulated Haiku token usage statistics for the current session. Use this at the end of tasks to report total token consumption in your Summary section.
+
+**Returns:** `Session Total: 2847 tokens (input=2105, output=742) | Queries: 3 (1 cached)`
+
+### `reset_kb_session_stats()`
+
+Reset session token statistics to zero. Use at the start of a new task if you want to track token usage for that specific task only.
+
 ## Dynamic Token Budgets
 
 The server automatically classifies queries and adjusts the Haiku token budget:
@@ -474,9 +486,31 @@ ruff check src/
 
 ## Token Usage Statistics
 
-Currently, the server does not track token usage statistics. Haiku API usage can be monitored through your [Anthropic dashboard](https://console.anthropic.com).
+The server tracks token usage at two levels:
 
-Future enhancement: Add token tracking and reporting.
+### Per-Query Stats
+Each `ask_knowledge_base` response includes a stats line:
+```
+Haiku: input=1506 | output=317 | budget=1000 | type=simple | cached=no
+```
+
+| Field | Description |
+|-------|-------------|
+| `input` | Tokens sent to Haiku (KB context + query) |
+| `output` | Tokens in Haiku's response |
+| `budget` | Max output tokens for query type |
+| `type` | Query classification (simple/code_example/complex) |
+| `cached` | Whether result came from cache (no API call) |
+
+### Session Stats
+Use `get_kb_session_stats()` to get accumulated totals for the entire session:
+```
+Session Total: 2847 tokens (input=2105, output=742) | Queries: 3 (1 cached)
+```
+
+This is useful for including in task summaries to track knowledge base efficiency over time.
+
+You can also monitor overall API usage through your [Anthropic dashboard](https://console.anthropic.com).
 
 ## Cross-Platform Compatibility
 

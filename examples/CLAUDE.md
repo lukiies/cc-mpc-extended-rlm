@@ -147,4 +147,56 @@ For detailed information, see `.claude/` folder:
 
 ---
 
+## Knowledge Base Agent (cc-mcp-extended-rlm)
+
+### When to Use
+- **Always** use `mcp__enhanced-rlm__ask_knowledge_base` for:
+  - Project-specific conventions and patterns
+  - Gotchas and common errors
+  - Code examples for this codebase
+  - Build/test procedures specific to this project
+
+### Query Best Practices
+1. **Be specific:** "How to add a document header field?" (good) vs "document stuff" (bad)
+2. **Include context:** Add the feature area: "testing pexpect patterns for menu navigation"
+3. **Use keywords from INDEX.md:** Reference topic names for better matching
+
+### Understanding Stats
+After each knowledge base query, stats are shown:
+```
+Haiku: input=842 | output=523 | budget=1000 | type=simple | cached=no
+```
+- **input:** Tokens sent to Haiku (context from KB + query)
+- **output:** Tokens in Haiku's response
+- **budget:** Max output tokens allowed for query type
+- **type:** Query classification (simple/code_example/complex)
+- **cached:** Whether result came from cache (no API call)
+
+### Session Summary Requirement (MANDATORY)
+**CRITICAL: At the end of EVERY task**, when writing a Summary section, you MUST:
+1. **BEFORE writing the Summary**, call `mcp__enhanced-rlm__get_kb_session_stats`
+2. Include the returned stats in your Summary under "Knowledge Base Usage"
+3. If no KB queries were made, write: "Knowledge Base Usage: No queries this session"
+
+**This is NOT optional. Every Summary MUST have this section.**
+
+Example Summary format:
+```
+## Summary
+[Task description and what was accomplished]
+
+### Knowledge Base Usage
+Session Total: 2847 tokens (input=2105, output=742) | Queries: 3 (1 cached)
+```
+
+### Token Efficiency Goals
+- Target: <1500 input tokens for simple queries
+- Target: <3000 input tokens for code example queries
+- If consistently higher, review topic file sizes in `.claude/topics/`
+
+### Resetting Stats
+Use `mcp__enhanced-rlm__reset_kb_session_stats` at the start of a new task if you want to track token usage for that specific task only.
+
+---
+
 *This is an example CLAUDE.md demonstrating the recommended structure for Enhanced RLM MCP server.*

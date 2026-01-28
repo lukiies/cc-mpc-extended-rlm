@@ -3,7 +3,7 @@
 import hashlib
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from .chunker import Chunk
@@ -16,6 +16,47 @@ logger = logging.getLogger("enhanced-rlm.haiku")
 _response_cache: dict[str, tuple[str, float]] = {}
 CACHE_TTL_SECONDS = 3600  # 1 hour
 
+# Session-level token tracking
+@dataclass
+class SessionStats:
+    """Accumulated token usage for the current session."""
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_queries: int = 0
+    cached_queries: int = 0
+
+    def add_usage(self, input_tokens: int, output_tokens: int, cached: bool = False) -> None:
+        """Add token usage from a query."""
+        self.total_queries += 1
+        if cached:
+            self.cached_queries += 1
+        else:
+            self.total_input_tokens += input_tokens
+            self.total_output_tokens += output_tokens
+
+    def get_summary(self) -> str:
+        """Get human-readable summary of session stats."""
+        total = self.total_input_tokens + self.total_output_tokens
+        return (
+            f"Session Total: {total} tokens "
+            f"(input={self.total_input_tokens}, output={self.total_output_tokens}) | "
+            f"Queries: {self.total_queries} ({self.cached_queries} cached)"
+        )
+
+# Global session stats instance
+_session_stats = SessionStats()
+
+
+def get_session_stats() -> SessionStats:
+    """Get the current session stats."""
+    return _session_stats
+
+
+def reset_session_stats() -> None:
+    """Reset session stats to zero."""
+    global _session_stats
+    _session_stats = SessionStats()
+
 
 @dataclass
 class DistillationResult:
@@ -25,6 +66,8 @@ class DistillationResult:
     query_type: str
     token_budget: int
     cached: bool = False
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 def _get_cache_key(query: str, chunks: list[RankedChunk]) -> str:
@@ -152,6 +195,8 @@ class HaikuDistiller:
                 query_type="simple",
                 token_budget=0,
                 cached=False,
+                input_tokens=0,
+                output_tokens=0,
             )
 
         # Classify query and get token budget
@@ -166,11 +211,14 @@ class HaikuDistiller:
             cached_response = _check_cache(cache_key)
             if cached_response:
                 logger.info("Returning cached response")
+                _session_stats.add_usage(0, 0, cached=True)
                 return DistillationResult(
                     content=cached_response,
                     query_type=query_type,
                     token_budget=token_budget,
                     cached=True,
+                    input_tokens=0,
+                    output_tokens=0,
                 )
 
         # Format chunks for prompt
@@ -220,6 +268,14 @@ Always include source file references when citing specific information."""
                 messages=[{"role": "user", "content": prompt}],
             )
 
+            # Extract token usage from response
+            input_tokens = getattr(response.usage, 'input_tokens', 0) if response.usage else 0
+            output_tokens = getattr(response.usage, 'output_tokens', 0) if response.usage else 0
+
+            # Track in session stats
+            _session_stats.add_usage(input_tokens, output_tokens, cached=False)
+            logger.info(f"Token usage: input={input_tokens}, output={output_tokens}")
+
             # Safely extract response content
             result_content = ""
             if response.content and len(response.content) > 0:
@@ -239,6 +295,8 @@ Always include source file references when citing specific information."""
                 query_type=query_type,
                 token_budget=token_budget,
                 cached=False,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
             )
 
         except Exception as e:
@@ -273,6 +331,8 @@ Always include source file references when citing specific information."""
             query_type=query_type,
             token_budget=token_budget,
             cached=False,
+            input_tokens=0,
+            output_tokens=0,
         )
 
 

@@ -9,7 +9,12 @@ from mcp.server.fastmcp import FastMCP
 
 from .chunker import Chunker
 from .config import Config, load_config
-from .haiku_client import HaikuDistiller, clear_cache
+from .haiku_client import (
+    HaikuDistiller,
+    clear_cache,
+    get_session_stats,
+    reset_session_stats,
+)
 from .ranker import Ranker, RankedChunk
 from .search import KnowledgeSearch
 
@@ -174,12 +179,50 @@ def ask_knowledge_base(
         result = distiller.distill(query, ranked_chunks)
         if result.cached:
             logger.info("Returned cached response")
-        return result.content
+
+        # Build stats line
+        cached_str = "yes" if result.cached else "no"
+        stats_line = (
+            f"\n\n---\n"
+            f"Haiku: input={result.input_tokens} | output={result.output_tokens} | "
+            f"budget={result.token_budget} | type={result.query_type} | cached={cached_str}"
+        )
+        return result.content + stats_line
     else:
         # Fallback: format raw chunks without distillation
         logger.info("Haiku unavailable, returning raw chunks")
         query_type = classify_query(query)
         return format_chunks_for_response(ranked_chunks, query_type)
+
+
+@mcp.tool()
+def get_kb_session_stats() -> str:
+    """
+    Get accumulated Haiku token usage statistics for this session.
+
+    Use this at the end of a task or in summaries to report total
+    token consumption by the knowledge base agent.
+
+    Returns:
+        Session statistics including total tokens used
+    """
+    stats = get_session_stats()
+    return stats.get_summary()
+
+
+@mcp.tool()
+def reset_kb_session_stats() -> str:
+    """
+    Reset session token statistics to zero.
+
+    Use this at the start of a new task if you want to track
+    token usage for that specific task only.
+
+    Returns:
+        Confirmation message
+    """
+    reset_session_stats()
+    return "Session statistics reset to zero."
 
 
 @mcp.tool()
