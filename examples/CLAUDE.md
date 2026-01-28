@@ -70,6 +70,30 @@
 
 ---
 
+## Git Commit Verification
+
+**CRITICAL: Before declaring any task complete, verify ALL changes are committed.**
+
+1. **Always run `git status`** before AND after commits
+2. **Check for:**
+   - Modified files (staged and unstaged)
+   - Untracked files (new files, test folders)
+3. **After commit, verify:** "nothing to commit, working tree clean"
+
+**Common mistake:** Committing only documentation while forgetting source code changes (or vice versa). Both must be committed together.
+
+```bash
+# Verification pattern
+git status              # Check what needs to be committed
+git add <files>         # Stage changes
+git commit -m "message" # Commit
+git status              # MUST show "nothing to commit, working tree clean"
+git push                # Push to remote
+git status              # Final verification
+```
+
+---
+
 ## Project Overview
 
 [PROJECT_NAME] is a [brief description of your project].
