@@ -160,7 +160,7 @@ Please help me:
    Target structure:
    ```
    project/
-   ├── CLAUDE.md              <- Essential rules only (max 200 lines)
+   ├── CLAUDE.md              <- Essential rules (size based on project complexity)
    │                             MUST start with scope header (see above)
    └── .claude/
        ├── INDEX.md           <- Topic navigation index
@@ -178,9 +178,10 @@ Please help me:
    ```
 
    **IMPORTANT - Modular KB Principle:**
-   - Keep topic files SMALL (<100 lines each)
-   - One concept = one file
+   - Topic files in `.claude/topics/` should be focused (~100 lines target)
+   - One concept = one file (this is what enables the ~100 line target)
    - This enables efficient Haiku extraction (lower token usage)
+   - Note: CLAUDE.md and REFERENCE.md can be larger as they serve different purposes
    - Use INDEX.md for navigation between topics
 
 3. **CLAUDE.md MUST Start With Scope Header:**
@@ -440,13 +441,21 @@ If you have both but they're disorganized:
 
 ### CLAUDE.md Guidelines
 
+**Size principle:** CLAUDE.md should be as small as possible while containing ALL critical rules. Quality over arbitrary line limits.
+
+| Project Complexity | Typical CLAUDE.md Size | Notes |
+|--------------------|------------------------|-------|
+| Simple (single tech, few rules) | 50-150 lines | Basic projects |
+| Medium (multi-component) | 150-300 lines | Most projects |
+| Complex (enterprise, regulations) | 300-500+ lines | KSeF, HIPAA, financial systems |
+
 | Do | Don't |
 |----|-------|
-| Keep under 200 lines | Put everything in one file |
-| Use bullet points | Write long paragraphs |
-| Link to detailed docs | Duplicate content |
-| Focus on "must know" rules | Include rarely-used info |
-| Update when rules change | Let it become stale |
+| Include ALL critical rules | Scatter important rules across files |
+| Use bullet points and tables | Write long paragraphs |
+| Link to detailed docs for reference material | Duplicate content between files |
+| Focus on "must follow" rules | Include nice-to-have suggestions |
+| Keep rules that prevent errors | Move critical rules to obscure files |
 
 ### REFERENCE.md Guidelines
 
@@ -468,6 +477,65 @@ If you have both but they're disorganized:
 | Use consistent naming | Random file names |
 | Include both good and bad examples | Only show happy path |
 
+### Folder Naming Guidelines
+
+| Do | Don't |
+|----|-------|
+| Use regular folder names: `pre-requisites/`, `topics/` | Use hidden folders: `.prompts/`, `.internal/` |
+| Keep subfolders in `.claude/` visible | Nest hidden folders inside `.claude/` |
+| Use descriptive names: `research/`, `planning/` | Use cryptic names |
+
+**Why this matters:** Folders starting with `.` (dot) are treated as hidden by ripgrep and may not be searched properly, even when inside `.claude/`. The `.claude/` folder itself is an exception configured in the search paths.
+
+### INDEX.md Best Practices
+
+Create an `INDEX.md` in `.claude/` with:
+
+1. **Document table with keywords:**
+   ```markdown
+   | Document | Purpose | Keywords |
+   |----------|---------|----------|
+   | [REFERENCE.md](REFERENCE.md) | API docs | API, endpoints, models |
+   | [pre-requisites/RESEARCH.md](pre-requisites/RESEARCH.md) | Market analysis | competitors, integration, format |
+   ```
+
+2. **Quick reference sections by topic:**
+   ```markdown
+   ### Topic: Authentication
+   See: [REFERENCE.md](REFERENCE.md#authentication)
+   - JWT tokens
+   - Session management
+   - OAuth integration
+   ```
+
+**Why keywords matter:** The MCP server uses ripgrep to search. Adding explicit keywords in INDEX.md improves search discoverability, especially for documents that might use different terminology than the search query.
+
+### Pre-requisites Folder Pattern
+
+For research, planning, or analysis documents that inform future development:
+
+```
+.claude/
+├── pre-requisites/           <- Research & planning docs
+│   ├── COMPETITOR_ANALYSIS.md
+│   ├── ARCHITECTURE_DECISIONS.md
+│   └── INTEGRATION_RESEARCH.md
+├── REFERENCE.md              <- Implementation reference
+└── TROUBLESHOOTING.md        <- Problem solving
+```
+
+**Use pre-requisites/ for:**
+- Market research and competitor analysis
+- Architecture decision records (ADRs)
+- Integration planning documents
+- Technology evaluation reports
+- Requirements gathered before development
+
+**Benefits:**
+- Keeps implementation docs separate from planning docs
+- New team members can understand "why" decisions were made
+- Future development phases can reference earlier research
+
 ---
 
 ## Validation Checklist
@@ -476,7 +544,7 @@ After setup, verify:
 
 - [ ] `CLAUDE.md` starts with scope definition header (Project Rules - Scope Definition)
 - [ ] `CLAUDE.md` includes Self-Learning Protocol section (after scope header)
-- [ ] `CLAUDE.md` is under 200 lines (including header)
+- [ ] `CLAUDE.md` contains all critical rules (size appropriate to project complexity)
 - [ ] Scope header has customized project name, tech stack, and domain
 - [ ] `.claude/REFERENCE.md` contains detailed docs
 - [ ] `.claude/code_examples/` has language-specific subfolders (e.g., `csharp/`, `typescript/`)
@@ -525,27 +593,32 @@ CLAUDE.md (800 lines)
 
 **After** (optimized structure):
 ```
-CLAUDE.md (100 lines)
-├── Scope definition header (15 lines)  <- MUST be first!
-├── Build/run commands (15 lines)
-├── Key rules (30 lines)
-├── Quick gotchas (25 lines)
-└── Links to .claude/ docs (15 lines)
+CLAUDE.md (size varies by project complexity)
+├── Scope definition header        <- MUST be first!
+├── Self-learning protocol
+├── Critical rules (ALL of them!)
+├── Build/run commands
+├── Key gotchas
+└── Links to .claude/ docs
 
 .claude/
+├── INDEX.md                 <- Topic index with keywords (improves search!)
 ├── REFERENCE.md (400 lines)
 │   ├── Code conventions
 │   ├── Database patterns
 │   └── API documentation
-├── code_examples/           <- Language-specific subfolders
-│   ├── csharp/
-│   │   ├── database_patterns.cs
-│   │   └── validation_patterns.cs
-│   ├── typescript/
-│   │   └── api_handlers.ts
-│   └── sql/
-│       └── database_queries.sql
-└── TROUBLESHOOTING.md (120 lines)
+├── TROUBLESHOOTING.md (120 lines)
+├── pre-requisites/          <- Research & planning docs
+│   ├── ARCHITECTURE_DECISIONS.md
+│   └── INTEGRATION_RESEARCH.md
+└── code_examples/           <- Language-specific subfolders
+    ├── csharp/
+    │   ├── database_patterns.cs
+    │   └── validation_patterns.cs
+    ├── typescript/
+    │   └── api_handlers.ts
+    └── sql/
+        └── database_queries.sql
 ```
 
 ---

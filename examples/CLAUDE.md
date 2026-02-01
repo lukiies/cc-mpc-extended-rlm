@@ -99,8 +99,9 @@ git status              # Final verification
 [PROJECT_NAME] is a [brief description of your project].
 
 **Knowledge Base Structure (modular - token efficient):**
-- `.claude/INDEX.md` - Topic index with links
-- `.claude/topics/` - Small, focused topic files (<100 lines each)
+- `.claude/INDEX.md` - Topic index with keywords (improves search!)
+- `.claude/topics/` - Focused topic files (one concept per file)
+- `.claude/pre-requisites/` - Research & planning documents
 - `.claude/code_examples/` - Reusable code patterns by language
 
 Use `mcp__enhanced-rlm__ask_knowledge_base` to query topics efficiently.
