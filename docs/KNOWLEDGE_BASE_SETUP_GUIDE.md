@@ -253,7 +253,8 @@ Please help me:
 6. **Set Up MCP Configuration**
 
    Create `.mcp.json` in project root:
-   - For WSL projects: use `wsl.exe bash -lc` wrapper
+   - For WSL projects with VS Code WSL Remote: use `bash -c` (NOT `wsl.exe`)
+   - For WSL projects without WSL Remote (VS Code on Windows): use `wsl.exe bash -lc`
    - For Windows native: use Windows Python path
    - Don't include API key (should be in environment)
 
@@ -376,7 +377,29 @@ If you have both but they're disorganized:
 
 ## MCP Configuration Templates
 
-### For WSL Projects (project in WSL, VS Code on Windows)
+### For WSL Projects - VS Code WSL Remote (Recommended)
+
+If VS Code connects via WSL Remote extension (bottom-left shows "WSL: Ubuntu"):
+
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-c",
+        "/home/YOUR_USER/cc-mpc-extended-rlm/start_server.sh --path /home/YOUR_USER/your-project"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+### For WSL Projects - VS Code on Windows (without WSL Remote)
+
+If VS Code runs natively on Windows without WSL Remote extension:
 
 ```json
 {
@@ -387,7 +410,7 @@ If you have both but they're disorganized:
       "args": [
         "bash",
         "-lc",
-        "/home/YOUR_USER/cc-mpc-extended-rlm/.venv/bin/python -m enhanced_rlm.server --path /home/YOUR_USER/your-project"
+        "/home/YOUR_USER/cc-mpc-extended-rlm/start_server.sh --path /home/YOUR_USER/your-project"
       ],
       "env": {}
     }
@@ -562,7 +585,9 @@ After setup, verify:
 
 1. Check Python venv path in `.mcp.json`
 2. Verify `ANTHROPIC_API_KEY` is set in environment
-3. For WSL: ensure using `-lc` flag, key in `~/.profile`
+3. For WSL with VS Code WSL Remote: use `bash -c` (NOT `wsl.exe`) - using `wsl.exe` from within WSL breaks the MCP stdio protocol
+4. For WSL without WSL Remote: use `wsl.exe bash -lc`, ensure key is in `~/.profile`
+5. Check `.sync.log` in the server directory for platform detection and error messages
 
 ### Poor Search Results
 

@@ -30,6 +30,25 @@ fi
 log "=== MCP Server startup initiated ==="
 
 # -----------------------------------------------------------------------------
+# Platform detection (for debugging .mcp.json configuration issues)
+# -----------------------------------------------------------------------------
+detect_platform() {
+    if [[ -f /proc/version ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+        if [[ -n "$WSL_DISTRO_NAME" ]]; then
+            log "Platform: WSL ($WSL_DISTRO_NAME) - use 'bash -c' in .mcp.json (NOT wsl.exe)"
+        else
+            log "Platform: WSL - use 'bash -c' in .mcp.json (NOT wsl.exe)"
+        fi
+    elif [[ "$(uname)" == "Darwin" ]]; then
+        log "Platform: macOS - use start_server.sh directly in .mcp.json"
+    else
+        log "Platform: Linux - use start_server.sh directly in .mcp.json"
+    fi
+}
+
+detect_platform
+
+# -----------------------------------------------------------------------------
 # Step 1: Pull latest changes from GitHub
 # -----------------------------------------------------------------------------
 pull_latest() {
@@ -40,12 +59,12 @@ pull_latest() {
 
     log "Fetching latest from origin..."
 
-    if git fetch origin 2>/dev/null; then
+    if git fetch origin >/dev/null 2>&1; then
         # Get current branch
         local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 
-        # Try fast-forward merge
-        if git merge --ff-only "origin/$branch" 2>/dev/null; then
+        # Try fast-forward merge (stdout MUST be silenced - MCP uses stdio)
+        if git merge --ff-only "origin/$branch" >/dev/null 2>&1; then
             log "Successfully pulled latest changes from origin/$branch"
         else
             log "WARNING: Fast-forward merge not possible - local changes may diverge"

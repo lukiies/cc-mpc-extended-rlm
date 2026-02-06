@@ -138,9 +138,35 @@ This ensures all your projects always run the latest version of the agent withou
 }
 ```
 
-### Option 2: Windows + WSL Projects (Recommended) - With Auto-Pull
+### Option 2: Windows + WSL Projects - With Auto-Pull
 
-If your project is in WSL but VS Code/Claude Code runs on Windows:
+Choose the sub-option that matches how VS Code connects to your WSL project:
+
+#### Option 2a: VS Code WSL Remote Extension (Recommended)
+
+If you use **VS Code Remote - WSL** extension (bottom-left shows "WSL: Ubuntu" or similar), Claude Code runs **inside WSL**. Use `bash` directly - do NOT use `wsl.exe`:
+
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-c",
+        "/path/to/cc-mpc-extended-rlm/start_server.sh --path /path/to/your/project"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+**Note**: Use `-c` (not `-lc`) since the `start_server.sh` script handles environment setup. If your `ANTHROPIC_API_KEY` isn't detected, switch to `-lc` to load your login profile.
+
+#### Option 2b: VS Code on Windows (without WSL Remote)
+
+If VS Code runs **natively on Windows** and opens WSL folders directly (without the WSL Remote extension), Claude Code runs on the Windows side. Use `wsl.exe` to bridge into WSL:
 
 ```json
 {
@@ -160,6 +186,15 @@ If your project is in WSL but VS Code/Claude Code runs on Windows:
 ```
 
 **Important**: The `-lc` flag makes bash load your login profile (including `ANTHROPIC_API_KEY` from `~/.profile`).
+
+#### How to determine your setup
+
+| Indicator | You need | Config |
+|-----------|----------|--------|
+| VS Code bottom-left shows "WSL: Ubuntu" | Option 2a | `bash -c` |
+| VS Code bottom-left shows nothing / "Windows" | Option 2b | `wsl.exe bash -lc` |
+| `start_server.sh` log says "Platform: WSL" | Option 2a | `bash -c` |
+| `start_server.sh` log says "Platform: Windows (via wsl.exe)" | Option 2b | `wsl.exe bash -lc` |
 
 ### Option 3: Windows Native Projects - With Auto-Pull
 
@@ -212,7 +247,21 @@ If you prefer manual updates, you can still use the Python module directly:
 }
 ```
 
-**Windows + WSL:**
+**Windows + WSL (VS Code WSL Remote):**
+```json
+{
+  "mcpServers": {
+    "enhanced-rlm": {
+      "type": "stdio",
+      "command": "/path/to/cc-mpc-extended-rlm/.venv/bin/python",
+      "args": ["-m", "enhanced_rlm.server", "--path", "/path/to/your/project"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Windows + WSL (VS Code on Windows, without WSL Remote):**
 ```json
 {
   "mcpServers": {
@@ -478,11 +527,26 @@ ruff check src/
 2. For WSL: ensure you're using `-lc` flag (not `-c`) to load bash profile
 3. Check if you have API credits available at https://console.anthropic.com
 
+### MCP server keeps restarting / "No running MCP servers" (WSL)
+
+This typically happens when using `wsl.exe` in `.mcp.json` but Claude Code is already running inside WSL (e.g., via VS Code WSL Remote extension). The `wsl.exe` wrapper creates a second WSL session that corrupts the MCP stdio protocol.
+
+**Fix:** Change your `.mcp.json` from `wsl.exe` to `bash`:
+```json
+{
+  "command": "bash",
+  "args": ["-c", "/path/to/start_server.sh --path /path/to/project"]
+}
+```
+
+**How to tell:** Check the `start_server.sh` log file (`.sync.log` in the server directory). If you see many rapid "MCP Server startup initiated" entries but the server never stays running, this is likely the issue.
+
 ### WSL path issues
 
 - Use native Linux paths (e.g., `/home/user/project`)
 - Don't use Windows UNC paths (`\\wsl.localhost\...`) in the `--path` argument
-- The `-lc` flag is required for WSL to load environment variables from `~/.profile`
+- The `-lc` flag is required when using `wsl.exe` to load environment variables from `~/.profile`
+- When using `bash` directly (WSL Remote), `-c` is usually sufficient
 
 ## Token Usage Statistics
 
@@ -519,7 +583,8 @@ You can also monitor overall API usage through your [Anthropic dashboard](https:
 | Linux | Full support | Native ripgrep, env vars from shell profile |
 | macOS | Full support | Native ripgrep, env vars from shell profile |
 | Windows (native) | Full support | ripgrep via winget, env vars from Windows User Environment |
-| Windows + WSL | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.profile` |
+| Windows + WSL Remote | Full support | Use `bash -c` (NOT `wsl.exe`), env vars from `~/.profile` |
+| Windows + WSL (no Remote) | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.profile` |
 
 ## Security Notes
 
