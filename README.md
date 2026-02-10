@@ -301,9 +301,40 @@ To update an existing project to use auto-pull:
 
 The server will automatically read `ANTHROPIC_API_KEY` from environment variables.
 
-### Auto-approve MCP tools (optional)
+### Auto-approve tools (optional)
 
-Add to your project's `.claude/settings.json` to skip approval prompts:
+Add to your project's `.claude/settings.local.json` to skip approval prompts for all Claude Code tools and MCP tools:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Task(*)",
+      "TodoWrite(*)",
+      "NotebookEdit(*)",
+      "mcp__enhanced-rlm__ask_knowledge_base",
+      "mcp__enhanced-rlm__list_knowledge_base",
+      "mcp__enhanced-rlm__clear_knowledge_cache",
+      "mcp__enhanced-rlm__get_kb_session_stats",
+      "mcp__enhanced-rlm__reset_kb_session_stats"
+    ]
+  }
+}
+```
+
+A complete template is also available at [`examples/.claude/settings.local.json`](examples/.claude/settings.local.json).
+
+**Why all tools?** Without `Task(*)`, `TodoWrite(*)`, and `NotebookEdit(*)`, Claude Code will prompt for confirmation every time it launches subagents or tracks task progress, breaking autonomous workflows.
+
+**MCP-only auto-approve** (minimal, if you prefer to approve native Claude Code tools manually):
 
 ```json
 {

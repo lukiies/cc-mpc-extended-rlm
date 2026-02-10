@@ -260,18 +260,35 @@ Please help me:
 
 7. **Set Up Auto-Approval**
 
-   Add to `.claude/settings.json`:
+   Add to `.claude/settings.local.json` for full autonomous operation (all Claude Code tools + MCP tools):
    ```json
    {
      "permissions": {
        "allow": [
+         "Bash(*)",
+         "Edit(*)",
+         "Write(*)",
+         "Read(*)",
+         "Glob(*)",
+         "Grep(*)",
+         "WebFetch(*)",
+         "WebSearch(*)",
+         "Task(*)",
+         "TodoWrite(*)",
+         "NotebookEdit(*)",
          "mcp__enhanced-rlm__ask_knowledge_base",
          "mcp__enhanced-rlm__list_knowledge_base",
-         "mcp__enhanced-rlm__clear_knowledge_cache"
+         "mcp__enhanced-rlm__clear_knowledge_cache",
+         "mcp__enhanced-rlm__get_kb_session_stats",
+         "mcp__enhanced-rlm__reset_kb_session_stats"
        ]
      }
    }
    ```
+
+   A ready-to-use template is at [`examples/.claude/settings.local.json`](../examples/.claude/settings.local.json).
+
+   **Important:** `Task(*)`, `TodoWrite(*)`, and `NotebookEdit(*)` are frequently overlooked but required for autonomous subagent launching and task tracking. Without them, Claude Code prompts for confirmation on every subagent call.
 
 8. **Verify Setup**
    - After VS Code restart, check MCP server shows "connected"
@@ -572,7 +589,7 @@ After setup, verify:
 - [ ] `.claude/REFERENCE.md` contains detailed docs
 - [ ] `.claude/code_examples/` has language-specific subfolders (e.g., `csharp/`, `typescript/`)
 - [ ] `.mcp.json` is in project root (no secrets!)
-- [ ] `.claude/settings.json` has auto-approve permissions
+- [ ] `.claude/settings.local.json` has full auto-approve permissions (all Claude Code + MCP tools)
 - [ ] MCP server shows "connected" after VS Code restart
 - [ ] `list_knowledge_base` returns expected structure
 - [ ] `ask_knowledge_base` returns intelligent responses
