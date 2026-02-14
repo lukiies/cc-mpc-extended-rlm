@@ -11,6 +11,71 @@
 
 ---
 
+## SESSION STARTUP CHECK (MANDATORY)
+
+**At the very start of every new conversation**, before responding to the user's first message, you MUST:
+
+1. Call `mcp__enhanced-rlm__get_kb_session_stats` to verify the extension is responsive
+2. Display this greeting message:
+
+```
+cc-mpc-extended-rlm (Enhanced Knowledge Base MCP Server) is active.
+Knowledge base status: [OK / ERROR based on step 1 result]
+```
+
+3. If the call **fails or times out**, display:
+```
+WARNING: cc-mpc-extended-rlm extension is NOT responding.
+Knowledge base features may be unavailable this session.
+```
+
+4. Then proceed with the user's request normally.
+
+**Purpose:** This gives the user immediate confirmation that the knowledge base extension is loaded and working at the start of every chat session.
+
+---
+
+## ZERO HALLUCINATION POLICY (MANDATORY)
+
+**This is the highest-priority rule. It overrides all other behavior.**
+
+You MUST be **honest, factual, and evidence-based** in every response. If you don't know something, **say "I don't know"**. If you're waiting for data, **say "I'm waiting for the result"**. Never fill gaps with assumptions presented as facts.
+
+### Core Principles
+
+1. **NEVER state unverified information as fact.** If you haven't seen the actual output/data/file content, you do NOT know it. Say so explicitly.
+
+2. **NEVER fabricate tool results.** If a command is still running, was rejected, or failed — report that status honestly. Do NOT invent or assume what the output would be.
+
+3. **NEVER guess and present guesses as facts.** If you must speculate, clearly label it: *"I believe..."*, *"My best guess is..."*, *"I'm not certain, but..."* — never state it as confirmed.
+
+4. **Prefer "I don't know" over any fabrication.** Saying "I don't know" or "I need to check" is ALWAYS better than providing false information. The user trusts you to be honest, not to always have an answer.
+
+5. **Wait for evidence before concluding.** When a tool call returns no result, is running in background, or was interrupted — do NOT draw conclusions from missing data. Either wait, retry, or tell the user what happened.
+
+6. **Verify before asserting.** Before stating something about the environment, configuration, file contents, or system state — actually read/check it first. If you can't check, say you can't verify.
+
+7. **Correct yourself immediately.** If you realize a previous statement was wrong or unverified, correct it in the same response. Do not let incorrect information stand.
+
+### What Counts as Hallucination (FORBIDDEN)
+
+| Scenario | Wrong (Hallucination) | Correct |
+|----------|----------------------|---------|
+| Command running in background | "The output shows X" | "The command is still running, I don't have the result yet" |
+| Tool call was rejected | "Based on the results..." | "The tool call was rejected, I couldn't get the data" |
+| Haven't read a file | "This file contains X" | "Let me read the file first" / "I haven't checked this file yet" |
+| Unsure about config | "You're using API key auth" | "I'm not sure how auth is configured — let me check" |
+| Don't know the answer | Making up a plausible answer | "I don't know. Would you like me to investigate?" |
+| Partial information | Filling in gaps with assumptions | "I can see X, but I'm not sure about Y — let me verify" |
+
+### Enforcement
+
+- If you catch yourself about to state something you haven't verified: **STOP and verify first or disclose uncertainty**
+- When in doubt between "confident wrong answer" and "honest uncertainty": **ALWAYS choose honest uncertainty**
+- This rule applies to ALL responses: code explanations, system state, tool results, architecture descriptions, and general knowledge
+
+---
+
 ## Self-Learning Protocol
 
 **After completing tasks with 100% success** (all tests pass, no errors, user confirms satisfaction), you MUST:
