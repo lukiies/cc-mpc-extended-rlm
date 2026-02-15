@@ -607,11 +607,25 @@ This is useful for including in task summaries to track knowledge base efficienc
 
 You can also monitor overall API usage through your [Anthropic dashboard](https://console.anthropic.com).
 
+## VS Code Remote SSH: Persistent Background Work
+
+When using Claude Code via VS Code Remote SSH, background agents and tasks can survive laptop disconnections. See the comprehensive guide:
+
+**[VS Code Remote SSH Guide](docs/VSCODE_REMOTE_SSH_GUIDE.md)**
+
+Key findings:
+- Background work continues during lid close (proven by testing)
+- Default 3h reconnection grace period can be extended to 12h+
+- Requires patching `--reconnection-grace-time` in VS Code Server launch script
+- systemd path watcher auto-patches new VS Code versions
+- Minimum 2 GB RAM recommended for server (1 GB causes heavy swap thrashing)
+
 ## Cross-Platform Compatibility
 
 | Platform | Status | Notes |
 |----------|--------|-------|
 | Linux | Full support | Native ripgrep, env vars from shell profile |
+| Linux (Remote SSH) | Full support | See [Remote SSH Guide](docs/VSCODE_REMOTE_SSH_GUIDE.md) for persistent background work |
 | macOS | Full support | Native ripgrep, env vars from shell profile |
 | Windows (native) | Full support | ripgrep via winget, env vars from Windows User Environment |
 | Windows + WSL Remote | Full support | Use `bash -c` (NOT `wsl.exe`), env vars from `~/.profile` |
