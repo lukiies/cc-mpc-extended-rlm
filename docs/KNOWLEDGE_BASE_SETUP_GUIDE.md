@@ -290,7 +290,22 @@ Please help me:
 
    **Important:** `Task(*)`, `TodoWrite(*)`, and `NotebookEdit(*)` are frequently overlooked but required for autonomous subagent launching and task tracking. Without them, Claude Code prompts for confirmation on every subagent call.
 
-8. **Verify Setup**
+8. **Set Up Auto Memory Startup Check**
+
+   Claude Code has a persistent auto memory directory (`MEMORY.md`) that is injected into the system prompt. Rules placed here are more reliably followed than CLAUDE.md instructions alone.
+
+   **On the very first session** with this project, Claude MUST check its auto memory for the startup check rule and add it if missing:
+
+   ```markdown
+   ## MANDATORY SESSION STARTUP CHECK (BEFORE ANYTHING ELSE)
+   - **FIRST action in EVERY new conversation:** Call `mcp__enhanced-rlm__get_kb_session_stats` BEFORE responding to the user's first message
+   - Display the greeting: `cc-mpc-extended-rlm is active. Knowledge base status: OK` (or WARNING if it fails)
+   - **This is NOT optional** — do it before even reading the user's question
+   ```
+
+   **Why this matters:** Without auto memory reinforcement, Claude frequently "forgets" to run the startup check despite it being in CLAUDE.md. This dual-location approach ensures compliance.
+
+9. **Verify Setup**
    - After VS Code restart, check MCP server shows "connected"
    - Test with: ask_knowledge_base("What are the key rules for this project?")
 
@@ -593,6 +608,8 @@ After setup, verify:
 - [ ] MCP server shows "connected" after VS Code restart
 - [ ] `list_knowledge_base` returns expected structure
 - [ ] `ask_knowledge_base` returns intelligent responses
+- [ ] Auto memory (`MEMORY.md`) contains "MANDATORY SESSION STARTUP CHECK" section
+- [ ] First message in new conversation displays `cc-mpc-extended-rlm is active` greeting
 
 ---
 
