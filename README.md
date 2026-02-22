@@ -607,6 +607,18 @@ This is useful for including in task summaries to track knowledge base efficienc
 
 You can also monitor overall API usage through your [Anthropic dashboard](https://console.anthropic.com).
 
+## Development Best Practices
+
+Universal lessons learned across projects using this extension, covering web security, deployment, and common gotchas:
+
+**[Development Best Practices](docs/DEVELOPMENT_BEST_PRACTICES.md)**
+
+Key highlights:
+- Client-side CSS/JS auth hiding is NOT security - always use server-side validation
+- Test security at HTTP level (`curl`), not browser level
+- Service user file permissions checklist for systemd deployments
+- Self-learning protocol observations and routing patterns
+
 ## VS Code Remote SSH: Persistent Background Work
 
 When using Claude Code via VS Code Remote SSH, background agents and tasks can survive laptop disconnections. See the comprehensive guide:

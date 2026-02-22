@@ -216,6 +216,7 @@ npm run build
 1. **Environment variables** - copy `.env.example` to `.env` before running
 2. **Database migrations** - run `npm run migrate` after pulling new changes
 3. **API routes** - all routes start with `/api/v1/`
+4. **Web auth security** - NEVER use client-side CSS/JS hiding for content protection. Protected content must only be served after server-side validation. Always test with `curl`, not just a browser. See [Development Best Practices](../docs/DEVELOPMENT_BEST_PRACTICES.md)
 
 ## Knowledge Base
 
