@@ -19,7 +19,7 @@ class SearchConfig:
 class HaikuConfig:
     """Configuration for Claude Haiku distillation."""
 
-    model: str = "claude-3-5-haiku-20241022"
+    model: str = "claude-haiku-4-5-20251001"
     # Dynamic token budgets based on query type
     simple_budget: int = 1000
     code_example_budget: int = 4000
