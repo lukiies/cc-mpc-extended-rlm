@@ -607,6 +607,43 @@ This is useful for including in task summaries to track knowledge base efficienc
 
 You can also monitor overall API usage through your [Anthropic dashboard](https://console.anthropic.com).
 
+## Documentation Website (Optional)
+
+Enhanced RLM can generate a **static documentation website** from your `.claude/topics/*.md` knowledge base files — a polished, login-protected SPA that makes your project documentation browsable by anyone with credentials.
+
+### Key Features
+- **Single HTML file**: All CSS, JS, and content bundled into one `index.html`
+- **Client-side auth**: Simple login screen with credentials from `.env`
+- **Dark/light theme**: User-selectable, persisted in localStorage
+- **Responsive**: Sidebar navigation, right-side TOC, mobile support
+- **Auto-deploy**: Claude automatically rebuilds and deploys when topics change
+
+### Quick Setup
+
+1. Copy `examples/.env.example` to your project root as `.env`
+2. Set `WEBSITE_ENABLED=true` and configure prefix, domain, credentials
+3. Copy `examples/website/build.py` to `website/build.py` and update `TOPIC_ORDER`
+4. Add the auto-deploy trigger rule to your `CLAUDE.md` (see template in `examples/CLAUDE.md`)
+5. Build: `python website/build.py` → Deploy: `scp website/index.html host:/path`
+
+### Configuration (.env)
+
+All website settings are stored in `.env` (never committed to git):
+
+```env
+WEBSITE_ENABLED=true
+WEBSITE_PREFIX=docs
+WEBSITE_DOMAIN=example.com
+WEBSITE_TITLE=My Knowledge Base
+WEBSITE_DEPLOY_HOST=myserver
+WEBSITE_DEPLOY_PATH=/var/www/docs.example.com/index.html
+WEBSITE_USERS=admin@example.com:password:Admin:admin
+```
+
+See [Website Guide](docs/WEBSITE_GUIDE.md) for full documentation including server setup, design details, and security considerations.
+
+---
+
 ## Development Best Practices
 
 Universal lessons learned across projects using this extension, covering web security, deployment, and common gotchas:

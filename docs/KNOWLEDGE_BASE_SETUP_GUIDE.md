@@ -305,9 +305,41 @@ Please help me:
 
    **Why this matters:** Without auto memory reinforcement, Claude frequently "forgets" to run the startup check despite it being in CLAUDE.md. This dual-location approach ensures compliance.
 
-9. **Verify Setup**
-   - After VS Code restart, check MCP server shows "connected"
-   - Test with: ask_knowledge_base("What are the key rules for this project?")
+9. **Configure Documentation Website (Optional)**
+
+   Enhanced RLM can generate a static documentation website from your `.claude/topics/*.md` files.
+
+   **Ask the user** (or check if they specified in the integration prompt):
+   - Do you want a documentation website for this project? (`WEBSITE_ENABLED`)
+   - If yes: What URL prefix? What domain? What login credentials?
+   - Does a web server already exist, or does one need to be set up?
+
+   **If website is desired:**
+   a. Copy `examples/.env.example` to the project root as `.env`
+   b. Fill in `WEBSITE_ENABLED=true` and all website settings
+   c. Copy `examples/website/build.py` to `website/build.py` in the project
+   d. Update `TOPIC_ORDER` in `build.py` with the project's topic files
+   e. Add the "Auto-Deploy" trigger rule to `CLAUDE.md` (see `examples/CLAUDE.md`)
+   f. Ensure `.env` is in `.gitignore`
+
+   **If website is NOT desired:**
+   a. Create `.env` with `WEBSITE_ENABLED=false` (or skip `.env` entirely)
+   b. Do NOT add the auto-deploy trigger rule to `CLAUDE.md`
+
+   See [Website Guide](WEBSITE_GUIDE.md) for full documentation.
+
+10. **Verify Setup**
+    - After VS Code restart, check MCP server shows "connected"
+    - Test with: ask_knowledge_base("What are the key rules for this project?")
+
+10. **Documentation Website (Optional)**
+
+    Ask me if I want a documentation website for this project:
+    - If YES: set up `.env` with `WEBSITE_ENABLED=true`, configure website prefix/domain/credentials
+    - If NO: create `.env` with `WEBSITE_ENABLED=false` or skip it
+    - Either way, ensure `.env` is in `.gitignore`
+    - Copy the website build script template if website is enabled
+    - Add the auto-deploy trigger rule to CLAUDE.md if website is enabled
 
 Please start by analyzing my current project state and propose a transformation plan.
 ```
@@ -610,6 +642,11 @@ After setup, verify:
 - [ ] `ask_knowledge_base` returns intelligent responses
 - [ ] Auto memory (`MEMORY.md`) contains "MANDATORY SESSION STARTUP CHECK" section
 - [ ] First message in new conversation displays `cc-mpc-extended-rlm is active` greeting
+- [ ] `.env` file exists with `WEBSITE_ENABLED` set (true or false)
+- [ ] `.env` is listed in `.gitignore` (never committed)
+- [ ] `.env.example` exists for reference (safe to commit)
+- [ ] If website enabled: `website/build.py` exists with `TOPIC_ORDER` configured
+- [ ] If website enabled: CLAUDE.md contains auto-deploy trigger rule
 
 ---
 

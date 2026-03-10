@@ -229,6 +229,48 @@ For detailed information, see `.claude/` folder:
 
 ---
 
+## Auto-Deploy: Documentation Website (TRIGGER RULE)
+
+> **This section only applies if `WEBSITE_ENABLED=true` in the project's `.env` file.**
+> If the project does not have a documentation website, remove this section entirely.
+
+**CRITICAL: This rule MUST be evaluated after EVERY file modification in `.claude/topics/`.**
+
+### Trigger Condition
+Whenever ANY file in `.claude/topics/*.md` or `.claude/INDEX.md` is created, modified, or deleted during the current session, you MUST:
+
+1. **Rebuild the static site:**
+   ```
+   cd "<workspace-root>" && python website/build.py
+   ```
+
+2. **Deploy to the server:**
+   ```
+   scp website/index.html [WEBSITE_DEPLOY_HOST]:[WEBSITE_DEPLOY_PATH]
+   ```
+   *(Replace with actual values from `.env`)*
+
+3. **Confirm deployment** with a brief message: `Deployed updated knowledge base to [WEBSITE_URL]`
+
+### When NOT to trigger
+- If the session only READ topic files without modifying them
+- If `build.py` itself was modified but no topic files changed (rebuild anyway in that case)
+
+### Website Details
+- **URL:** `https://[WEBSITE_PREFIX].[WEBSITE_DOMAIN]`
+- **Configuration:** All settings in `.env` (see `.env.example` for reference)
+- **Build script:** `website/build.py` (generates single `index.html` from `.claude/topics/*.md`)
+- **Login credentials:** Defined in `WEBSITE_USERS` in `.env`
+
+### Adding a New Topic to the Website
+When adding a new topic file to `.claude/topics/`:
+1. Create the `.md` file in `.claude/topics/`
+2. **Add entry to `TOPIC_ORDER` in `website/build.py`** — files not in this list will NOT appear on the website
+3. Update `.claude/INDEX.md` with the new topic row
+4. Rebuild and deploy (steps above)
+
+---
+
 ## Knowledge Base Agent (cc-mcp-extended-rlm)
 
 ### When to Use
