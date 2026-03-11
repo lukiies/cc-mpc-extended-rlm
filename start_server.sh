@@ -30,6 +30,33 @@ fi
 log "=== MCP Server startup initiated ==="
 
 # -----------------------------------------------------------------------------
+# Load secrets (API keys, etc.) from ~/.secrets/.env
+# -----------------------------------------------------------------------------
+# IMPORTANT: The Claude Code CLI may spawn this process with a minimal
+# environment where $HOME is not set. We resolve HOME from the passwd database
+# as a fallback. The .mcp.json "env": {} field and "set -a; source" tricks
+# do NOT reliably pass environment variables to the spawned process.
+# Loading secrets HERE in the script is the only reliable method.
+# -----------------------------------------------------------------------------
+_resolve_home() {
+    if [[ -n "$HOME" ]]; then
+        echo "$HOME"
+    else
+        getent passwd "$(whoami)" 2>/dev/null | cut -d: -f6
+    fi
+}
+
+_REAL_HOME="$(_resolve_home)"
+if [[ -n "$_REAL_HOME" && -f "$_REAL_HOME/.secrets/.env" ]]; then
+    set -a
+    source "$_REAL_HOME/.secrets/.env"
+    set +a
+    log "Loaded secrets from $_REAL_HOME/.secrets/.env"
+else
+    log "WARNING: No secrets file found at $_REAL_HOME/.secrets/.env"
+fi
+
+# -----------------------------------------------------------------------------
 # Platform detection (for debugging .mcp.json configuration issues)
 # -----------------------------------------------------------------------------
 detect_platform() {
@@ -76,15 +103,23 @@ pull_latest() {
 }
 
 # -----------------------------------------------------------------------------
-# Step 2: Run the pull operation
+# Step 2: Run the pull operation in the BACKGROUND (non-blocking)
 # -----------------------------------------------------------------------------
-log "Starting git pull..."
+# IMPORTANT: git pull MUST NOT block server startup.
+# The VSCode extension polls MCP status within ~3 seconds of launching a chat.
+# If the server takes >3s to start, the extension gives up and shows
+# "No running MCP servers." Git fetch alone takes 1-2s, which pushes total
+# startup past the threshold. Running it in the background fixes this.
+# -----------------------------------------------------------------------------
+(
+    log "Starting background git pull..."
+    pull_latest
+    log "Background git pull completed."
+) &
 
-pull_latest
-
-log "Git pull completed, starting MCP server..."
+log "Starting MCP server (git pull running in background)..."
 
 # -----------------------------------------------------------------------------
-# Step 3: Start the MCP server
+# Step 3: Start the MCP server IMMEDIATELY
 # -----------------------------------------------------------------------------
 exec "$SCRIPT_DIR/.venv/bin/python" -m enhanced_rlm.server "$@"
