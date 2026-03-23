@@ -290,20 +290,76 @@ Please help me:
 
    **Important:** `Task(*)`, `TodoWrite(*)`, and `NotebookEdit(*)` are frequently overlooked but required for autonomous subagent launching and task tracking. Without them, Claude Code prompts for confirmation on every subagent call.
 
-8. **Set Up Auto Memory Startup Check**
+8. **Set Up MEMORY.md — Behavioral Identity (THREE-TIER ARCHITECTURE)**
 
-   Claude Code has a persistent auto memory directory (`MEMORY.md`) that is injected into the system prompt. Rules placed here are more reliably followed than CLAUDE.md instructions alone.
+   Claude Code has a persistent auto-memory directory (`~/.claude/projects/.../memory/`) with a `MEMORY.md` file that is loaded every turn. This is the **behavioral identity** tier — it shapes HOW the agent works across sessions.
 
-   **On the very first session** with this project, Claude MUST check its auto memory for the startup check rule and add it if missing:
+   **On the very first session** with this project, Claude MUST initialize MEMORY.md with:
 
    ```markdown
-   ## MANDATORY SESSION STARTUP CHECK (BEFORE ANYTHING ELSE)
-   - **FIRST action in EVERY new conversation:** Call `mcp__enhanced-rlm__get_kb_session_stats` BEFORE responding to the user's first message
-   - Display the greeting: `cc-mpc-extended-rlm is active. Knowledge base status: OK` (or WARNING if it fails)
-   - **This is NOT optional** — do it before even reading the user's question
+   # Behavioral Identity — [PROJECT_NAME]
+
+   This file shapes HOW I think and work. CLAUDE.md has project rules. This file has behavioral principles.
+
+   ---
+
+   ## CORE BEHAVIORAL PRINCIPLES
+
+   ### 1. VERIFY BEFORE DECLARING DONE
+   Never declare a task complete without verifying the actual result in the running system.
+   Tests passing ≠ it works — verify the real user experience.
+
+   ### 2. STAY FOCUSED ON THE PRIMARY ASK
+   Identify what the user needs most. Do that FIRST. Don't drift to secondary tasks.
+
+   ### 3. NEVER GUESS — INVESTIGATE OR ASK
+   When unsure, say "I don't know, let me check." Never fabricate plausible-sounding answers.
+
+   ### 4. HONESTY ABOUT FAILURES > FALSE SUCCESS
+   If something broke, say it broke. Never hide behind "tests pass" or partial success.
+
+   ---
+
+   ## SESSION PROTOCOL
+
+   ### Startup
+   1. Call `mcp__enhanced-rlm__get_kb_session_stats` — verify MCP is responsive
+   2. Display: `cc-mpc-extended-rlm active. KB status: [OK/ERROR]`
+   3. Read this file. Internalize principles.
+
+   ### During Work
+   - Query KB via `mcp__enhanced-rlm__ask_knowledge_base` for technical details
+   - Track complex tasks with TodoWrite
+
+   ### End of Session
+   1. Update KB with lessons learned (route per three-tier architecture)
+   2. Call `mcp__enhanced-rlm__get_kb_session_stats`
+   3. Report stats under "Knowledge Base Usage"
+
+   ---
+
+   ## SELF-LEARNING PROTOCOL
+
+   After every non-trivial task, update the knowledge base:
+   - **Behavioral correction** (how I work) → THIS FILE (MEMORY.md)
+   - **User feedback/preference** → `feedback_*.md` in this memory directory
+   - **Technical knowledge** → `.claude/topics/*.md` in project repo
+   - **Procedural rule** → `CLAUDE.md` in project repo
+   - **Cross-project lesson** → `cc-mpc-extended-rlm/docs/`
+
+   Keep MEMORY.md under 120 lines. Route details to KB topics or individual memory files.
+
+   ---
+
+   ## Memory File Index
+   [Links to feedback_*.md, project_*.md, user_*.md files as they accumulate]
    ```
 
-   **Why this matters:** Without auto memory reinforcement, Claude frequently "forgets" to run the startup check despite it being in CLAUDE.md. This dual-location approach ensures compliance.
+   **Why MEMORY.md matters:** Without behavioral identity persistence, Claude repeats the same mistakes every session. MEMORY.md ensures behavioral continuity — corrections stick, preferences are remembered, and each session builds on the last.
+
+   **Scaling rule:** MEMORY.md has a 200-line truncation limit. Target 120 lines. When it grows too large, consolidate details into `.claude/topics/operational-feedback.md` and keep only principles + pointers in MEMORY.md.
+
+   See [MEMORY Integration Guide](MEMORY_INTEGRATION_GUIDE.md) for the complete three-tier architecture.
 
 9. **Configure Documentation Website (Optional)**
 
@@ -640,7 +696,7 @@ After setup, verify:
 - [ ] MCP server shows "connected" after VS Code restart
 - [ ] `list_knowledge_base` returns expected structure
 - [ ] `ask_knowledge_base` returns intelligent responses
-- [ ] Auto memory (`MEMORY.md`) contains "MANDATORY SESSION STARTUP CHECK" section
+- [ ] Auto memory (`MEMORY.md`) contains behavioral identity with core principles and session protocol
 - [ ] First message in new conversation displays `cc-mpc-extended-rlm is active` greeting
 - [ ] `.env` file exists with `WEBSITE_ENABLED` set (true or false)
 - [ ] `.env` is listed in `.gitignore` (never committed)

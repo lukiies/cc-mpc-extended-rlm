@@ -33,20 +33,50 @@ Knowledge base features may be unavailable this session.
 
 **Purpose:** This gives the user immediate confirmation that the knowledge base extension is loaded and working at the start of every chat session.
 
-### Auto Memory Reinforcement (CRITICAL)
+### MEMORY.md — Behavioral Identity (THREE-TIER ARCHITECTURE)
 
-CLAUDE.md instructions alone are **not sufficient** to guarantee the startup check runs — they can be overlooked. You MUST also have this rule in your **persistent auto memory** (`MEMORY.md` in your auto memory directory).
+The knowledge management system uses **three tiers**, each with a specific purpose:
 
-**On first session with any new project**, check if your auto memory contains a "MANDATORY SESSION STARTUP CHECK" section. If it does NOT exist, add it immediately:
+| Tier | Purpose | Location | Loaded |
+|------|---------|----------|--------|
+| **Behavioral identity** | HOW to work — principles earned from real mistakes, user corrections, feedback | `MEMORY.md` (auto-memory) + `feedback_*.md` / `project_*.md` / `user_*.md` | Every turn ✓ |
+| **Project rules** | WHAT to follow — procedures, build commands, KB index, critical rules | `CLAUDE.md` (repo root) | Every turn ✓ |
+| **Technical knowledge** | WHAT to know — architecture, patterns, gotchas, code examples | `.claude/topics/*.md` | On-demand via MCP ✓ |
 
+**MEMORY.md IS the right place for behavioral principles** — they SHOULD be loaded every turn because they shape how you think and work. What should NOT be in MEMORY.md is technical project knowledge — that belongs in `.claude/topics/` queried via MCP.
+
+**MEMORY.md structure:**
 ```markdown
-## MANDATORY SESSION STARTUP CHECK (BEFORE ANYTHING ELSE)
-- **FIRST action in EVERY new conversation:** Call `mcp__enhanced-rlm__get_kb_session_stats` BEFORE responding to the user's first message
-- Display the greeting: `cc-mpc-extended-rlm is active. Knowledge base status: OK` (or WARNING if it fails)
-- **This is NOT optional** — do it before even reading the user's question
+# Behavioral Identity
+
+## Core Principles
+[5-8 principles earned from real corrections — each with incident context]
+
+## Session Protocol
+[Startup, during work, end-of-session steps]
+
+## Self-Learning Protocol
+[Routing table: behavioral → MEMORY.md, project → topics/, procedural → CLAUDE.md]
+
+## Memory File Index
+[Links to feedback_*.md, project_*.md, user_*.md files]
 ```
 
-**Why both locations?** Auto memory is loaded directly into the system prompt and is more reliably followed than CLAUDE.md project instructions. The CLAUDE.md rule is the source of truth; the auto memory entry ensures compliance.
+**Scaling rule:** Keep MEMORY.md under 120 lines (max 200 — Claude truncates after 200). Route details to `.claude/topics/` or individual memory files (`feedback_*.md`, `project_*.md`, `user_*.md`).
+
+**What goes WHERE:**
+
+| Knowledge Type | Target | Example |
+|---------------|--------|---------|
+| Behavioral correction (how you work) | `MEMORY.md` | "Never declare done without verifying the running system" |
+| User feedback on approach | `feedback_*.md` in auto-memory | "Always discuss approach before coding for tax features" |
+| User profile/context | `user_*.md` in auto-memory | "User is a PM, efficiency = business survival" |
+| Project context (non-code) | `project_*.md` in auto-memory | "Merge freeze starts 2026-03-05" |
+| Technical detail | `.claude/topics/*.md` | API endpoint patterns, build procedures |
+| Critical procedural rule | `CLAUDE.md` | "Never modify DB manually", "All tests must pass" |
+| Cross-project lesson | `cc-mpc-extended-rlm/docs/` | Universal best practices |
+
+See [MEMORY Integration Guide](../docs/MEMORY_INTEGRATION_GUIDE.md) for the complete setup procedure.
 
 ---
 
@@ -93,6 +123,9 @@ You MUST be **honest, factual, and evidence-based** in every response. If you do
 
 ## Self-Learning Protocol
 
+### The Fresh Instance Rule
+When updating knowledge, **think from the perspective of a brand new chat session** — a fresh Claude with zero memory that only sees `CLAUDE.md`, `MEMORY.md`, and MCP tools. Ask: "Would my future self find this, understand it, and follow it from message one?" If not, the update is incomplete. Every KB update is a message from your current self to your future self.
+
 **After completing tasks with 100% success** (all tests pass, no errors, user confirms satisfaction), you MUST:
 
 1. **Analyze the session** for lessons learned:
@@ -101,19 +134,24 @@ You MUST be **honest, factual, and evidence-based** in every response. If you do
    - Effective approaches worth preserving
    - Mistakes made and how they were fixed
 
-2. **Route updates to the appropriate target:**
+2. **Route updates to the appropriate target (THREE-TIER):**
 
-   | Lesson Type | Target Location | Examples |
-   |-------------|-----------------|----------|
-   | Project-specific | `.claude/topics/<topic>.md` | API quirks, framework gotchas, project conventions |
-   | Universal/reusable | `cc-mcp-extended-rlm` repository | General coding patterns, tool usage tips, universal best practices |
-   | Agent template improvement | Agent's `examples/CLAUDE.md` | Better rule phrasing, new section structure |
+   | Lesson Type | Target | When |
+   |-------------|--------|------|
+   | Behavioral correction (HOW I work) | `MEMORY.md` (auto-memory) | When I make a mistake in approach, verification, focus |
+   | User feedback/preference | `feedback_*.md` in auto-memory | When user corrects or validates an approach |
+   | User profile/context | `user_*.md` in auto-memory | When I learn about user's role, goals, expertise |
+   | Project context (non-code) | `project_*.md` in auto-memory | When I learn deadlines, decisions, stakeholder info |
+   | Technical knowledge | `.claude/topics/<topic>.md` | When I learn technical details about the project |
+   | Procedural rule | `CLAUDE.md` | When a new critical rule is needed |
+   | Cross-project lesson | `cc-mpc-extended-rlm/docs/` | Universal best practices |
 
 3. **Update using modular topic files:**
    - Add/update topic files in `.claude/topics/` (one topic per file, <100 lines)
    - Add code examples to `.claude/code_examples/`
    - Update `.claude/INDEX.md` when adding new topics
    - Update `CLAUDE.md` only for critical new rules
+   - Keep `MEMORY.md` under 120 lines — route details to individual memory files or KB topics
 
 4. **Skip if no meaningful lessons** - Not every session produces learnings worth preserving.
 

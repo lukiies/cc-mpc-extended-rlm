@@ -10,7 +10,8 @@ An MCP (Model Context Protocol) server that provides intelligent, token-efficien
 - **Response Caching**: Caches Haiku responses for 1 hour to reduce API calls
 - **Workspace-Specific**: Each project uses its own `CLAUDE.md` and `.claude/` folder
 - **Cross-Platform**: Works on Linux, macOS, and Windows (including WSL)
-- **Self-Learning Protocol**: Built-in rules for Claude to update knowledge base after successful task completions
+- **Three-Tier Knowledge Architecture**: MEMORY.md (behavioral identity) + CLAUDE.md (project rules) + .claude/topics/ (on-demand technical knowledge)
+- **Self-Learning Protocol**: Built-in rules for Claude to route lessons to the correct tier after task completions
 - **Auto-Pull on Startup**: Automatically pulls latest from GitHub on VS Code reload, ensuring all projects run the same version
 
 ## Architecture
@@ -350,19 +351,29 @@ A complete template is also available at [`examples/.claude/settings.local.json`
 }
 ```
 
-## Knowledge Base Structure
+## Three-Tier Knowledge Architecture
 
-The server searches a modular knowledge base in your project:
+The system uses three tiers, each with a specific purpose:
 
 ```
+TIER 1: BEHAVIORAL IDENTITY (loaded every turn — shapes HOW the agent works)
+~/.claude/projects/.../memory/
+├── MEMORY.md              <- Behavioral principles, session protocol, self-learning routing
+├── feedback_*.md          <- User corrections & validated approaches
+├── user_*.md              <- User profile, role, preferences
+└── project_*.md           <- Project context, deadlines, decisions
+
+TIER 2: PROJECT RULES (loaded every turn — WHAT to follow)
 your-project/
-├── CLAUDE.md              <- PRIMARY: Essential rules (MUST start with scope header)
-└── .claude/               <- SECONDARY: Detailed documentation
+├── CLAUDE.md              <- Scope, rules, build commands, gotchas, KB index
+
+TIER 3: TECHNICAL KNOWLEDGE (on-demand via MCP — token-efficient)
+your-project/
+└── .claude/
     ├── INDEX.md           <- Topic navigation index
     ├── topics/            <- MODULAR topic files (<100 lines each!)
-    │   ├── encoding.md
-    │   ├── build-system.md
-    │   ├── troubleshooting.md
+    │   ├── architecture.md
+    │   ├── api-endpoints.md
     │   └── [topic].md
     ├── code_examples/     <- Reusable code snippets by language
     │   ├── python/
@@ -371,7 +382,9 @@ your-project/
     └── REFERENCE.md       <- (Legacy/fallback for large reference tables)
 ```
 
-**Modular KB Principle:** Keep topic files SMALL (<100 lines). One concept = one file. This enables efficient Haiku extraction with lower token usage.
+**Key insight:** MEMORY.md IS valuable for behavioral principles — they SHOULD load every turn. Technical knowledge stays in `.claude/topics/` queried on-demand via MCP for token efficiency.
+
+See [MEMORY Integration Guide](docs/MEMORY_INTEGRATION_GUIDE.md) for the complete setup procedure.
 
 ### CLAUDE.md Scope Header (Required)
 
@@ -651,10 +664,11 @@ Universal lessons learned across projects using this extension, covering web sec
 **[Development Best Practices](docs/DEVELOPMENT_BEST_PRACTICES.md)**
 
 Key highlights:
+- **Three-tier knowledge architecture** — MEMORY.md + CLAUDE.md + .claude/topics/ (proven across 120+ sessions)
 - Client-side CSS/JS auth hiding is NOT security - always use server-side validation
 - Test security at HTTP level (`curl`), not browser level
 - Service user file permissions checklist for systemd deployments
-- Self-learning protocol observations and routing patterns
+- Self-learning routing: behavioral → MEMORY.md, technical → topics/, cross-project → this repo
 
 ## VS Code Remote SSH: Persistent Background Work
 
