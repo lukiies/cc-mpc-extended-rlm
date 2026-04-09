@@ -58,6 +58,9 @@ The knowledge management system uses **three tiers**, each with a specific purpo
 ## Self-Learning Protocol
 [Routing table: behavioral → MEMORY.md, project → topics/, procedural → CLAUDE.md]
 
+## Incident Log (summary — details in KB)
+[One-line: N corrections across M sessions. Pattern: X% type1, Y% type2...]
+
 ## Memory File Index
 [Links to feedback_*.md, project_*.md, user_*.md files]
 ```
@@ -242,6 +245,53 @@ npm test
 npm run build
 ```
 
+## Procedural Rules
+
+These are factual/procedural rules. Each carries its "why" — the incident or reasoning that created it.
+
+### Rule 1: NEVER MASK TEST FAILURES
+Investigate root cause → fix → verify. Never modify tests to pass artificially.
+**Why:** Tests are the safety net. Weakening them to show green hides real bugs.
+
+### Rule 2: ALL TESTS MUST PASS (100%)
+Backend + Frontend: 100% passing before any task is complete. "96% passed" = UNACCEPTABLE.
+**Why:** Partial pass rates hide regressions that compound over time.
+
+### Rule 3: ALWAYS CREATE TESTS FOR NEW FEATURES
+Every new feature MUST have tests covering: loading states, form interactions, API calls, error handling.
+**Why:** Untested features break silently in future changes.
+
+### Rule 4: NO HARDCODED URLs OR CREDENTIALS
+All config from `.env` files. API calls via configured client module.
+**Why:** Hardcoded values break across environments (dev/test/prod).
+
+### Rule 5: DATABASE — NEVER MANUAL SCHEMA MODIFICATIONS
+Use only the project's ORM migration system. NEVER run manual ALTER TABLE or direct schema changes.
+**Allowed:** Read-only queries (SELECT), ORM migration CLI commands.
+**Why:** Manual schema changes corrupt migration state. The ORM loses track, future migrations fail.
+
+### Rule 6: RESTART AFTER EVERY CODE CHANGE
+After code changes: kill process → clean build → start → verify with health check → THEN report done.
+**Why:** Build tools cache aggressively. Running without clean+rebuild uses stale code. 8+ incidents of testing old code.
+
+### Rule 7: NEVER WEAKEN API FOR TESTS
+Tests must adapt to the API (proper auth, retries, valid data). NEVER disable security, rate limits, or validation to make tests pass.
+**Why:** Disabling security to pass tests means production runs without security.
+
+### Rule 8: GIT COMMIT VERIFICATION
+Always `git status` before AND after commits. Verify "working tree clean." NEVER switch branches with uncommitted changes.
+**Why:** Multiple incidents of committing docs without code, or losing uncommitted work on branch switch.
+
+### Rule 9: BACKEND + FRONTEND = ATOMIC DEPLOY
+ALWAYS deploy backend AND frontend together. Never deploy from a dirty workspace with API contract changes.
+**Why:** Deploying only backend with changed response shapes while frontend expects old format = broken site.
+
+### Rule 10: PRODUCTION DEPLOYS ONLY ON EXPLICIT INSTRUCTION
+NEVER deploy to production without the user's explicit instruction. Finishing code ≠ permission to deploy.
+**Why:** Each deploy is a separate decision. Standing permission doesn't exist.
+
+---
+
 ## Key Rules
 
 1. **Use TypeScript** for all new code
@@ -255,6 +305,8 @@ npm run build
 2. **Database migrations** - run `npm run migrate` after pulling new changes
 3. **API routes** - all routes start with `/api/v1/`
 4. **Web auth security** - NEVER use client-side CSS/JS hiding for content protection. Protected content must only be served after server-side validation. Always test with `curl`, not just a browser. See [Development Best Practices](../docs/DEVELOPMENT_BEST_PRACTICES.md)
+5. **Stale builds** - Always clean + rebuild after code changes. Cached builds mask your changes.
+6. **API documentation** - When API endpoints change, update documentation in the same commit.
 
 ## Knowledge Base
 

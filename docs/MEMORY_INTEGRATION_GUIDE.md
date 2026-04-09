@@ -8,7 +8,7 @@ The proven approach for infinite memory, knowledge base, and self-learning proto
 
 Early approach said "MEMORY.md wastes tokens — don't use it." This was wrong.
 
-After 60+ real sessions across multiple projects, the evidence is clear: **MEMORY.md is essential for behavioral continuity**. Without it, Claude repeats the same mistakes every session. The key insight is that MEMORY.md should contain **behavioral principles** (HOW to work), not technical knowledge (WHAT to know).
+After 75+ real sessions across multiple projects, the evidence is clear: **MEMORY.md is essential for behavioral continuity**. Without it, Claude repeats the same mistakes every session. The key insight is that MEMORY.md should contain **behavioral principles** (HOW to work), not technical knowledge (WHAT to know).
 
 ---
 
@@ -142,10 +142,31 @@ After every non-trivial task, update the knowledge base:
 
 ---
 
+## INCIDENT LOG (summary — details in KB)
+
+0 corrections across 0 sessions. Patterns will emerge over time.
+[Update this line after each incident — track counts and pattern percentages]
+
+---
+
 ## Memory File Index
 - [feedback_example.md](feedback_example.md) — Description (date)
 - [user_role.md](user_role.md) — Description (date)
 ```
+
+### Incident Log Pattern
+
+A proven pattern from 75+ sessions: maintain a one-line **incident log** near the end of MEMORY.md that summarizes total corrections and their pattern distribution. This helps track improvement over time:
+
+```markdown
+## INCIDENT LOG (summary — details in KB)
+
+68 corrections across 75 sessions. Pattern: 53% restart/verify failures, 19% guess-instead-of-check,
+14% scope/focus, 8% git/commit, 3% unauthorized deploy, 3% destructive deploy ops.
+Latest: 2026-04-06 (brief description of most recent incident).
+```
+
+**Why this works:** A fresh session can instantly see the most common failure modes and focus its attention there. Pattern percentages expose the real risks — not the theoretical ones.
 
 ### Scaling Rules
 
@@ -153,6 +174,7 @@ After every non-trivial task, update the knowledge base:
 2. **When it grows too large**: Consolidate operational details into `.claude/topics/operational-feedback.md`, keep only principles + pointers in MEMORY.md
 3. **Individual memory files** (`feedback_*.md`, `user_*.md`, `project_*.md`) have no line limit but should stay focused (one concept per file)
 4. **The Memory File Index** in MEMORY.md links to all individual files — keep it updated
+5. **The incident log** stays as one concise line — update counts and pattern percentages, don't expand into details
 
 ---
 
@@ -292,7 +314,7 @@ See the conversion prompt template at the bottom of this guide for an automated 
 
 ## Evidence: Why This Works
 
-Tested across 120+ combined sessions on two production projects:
+Tested across 130+ combined sessions on two production projects:
 
 | Metric | KB-Only (no MEMORY.md) | Three-Tier (with MEMORY.md) |
 |--------|------------------------|----------------------------|
@@ -307,4 +329,4 @@ The 120-line MEMORY.md overhead is vastly outweighed by the behavioral continuit
 
 ---
 
-*Created: 2026-03-23 | Source: Cross-project comparison (eFakt 64 sessions, cvs_ls26 57 sessions)*
+*Updated: 2026-04-09 | Source: Cross-project comparison (eFakt 75 sessions, cvs_ls26 57 sessions) — incident log pattern and updated evidence*

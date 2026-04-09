@@ -318,6 +318,15 @@ Please help me:
    ### 4. HONESTY ABOUT FAILURES > FALSE SUCCESS
    If something broke, say it broke. Never hide behind "tests pass" or partial success.
 
+   ### 5. NEVER OVERREACH — DO WHAT WAS ASKED
+   Before any change, ask: "Did the user ask for this?" Unexpected changes erode trust.
+
+   ### 6. CHANGED COMPONENTS MUST BE RESTARTED AND VERIFIED
+   After code changes, restart affected parts and verify with health check before declaring done.
+
+   ### 7. NEVER WEAKEN THE SYSTEM TO MAKE TESTS PASS
+   Tests adapt to the system, never the reverse. Fix tests, not production code.
+
    ---
 
    ## SESSION PROTOCOL
@@ -351,6 +360,13 @@ Please help me:
 
    ---
 
+   ## INCIDENT LOG (summary — details in KB)
+
+   0 corrections across 0 sessions. Patterns will emerge over time.
+   [Update this line after each incident — track counts and pattern percentages]
+
+   ---
+
    ## Memory File Index
    [Links to feedback_*.md, project_*.md, user_*.md files as they accumulate]
    ```
@@ -358,6 +374,10 @@ Please help me:
    **Why MEMORY.md matters:** Without behavioral identity persistence, Claude repeats the same mistakes every session. MEMORY.md ensures behavioral continuity — corrections stick, preferences are remembered, and each session builds on the last.
 
    **Scaling rule:** MEMORY.md has a 200-line truncation limit. Target 120 lines. When it grows too large, consolidate details into `.claude/topics/operational-feedback.md` and keep only principles + pointers in MEMORY.md.
+
+   **Incident log pattern:** The one-line incident log tracks total corrections and pattern distribution (e.g., "53% restart/verify, 19% guess-instead-of-check"). This gives a fresh session instant visibility into the most common failure modes. See [MEMORY Integration Guide](MEMORY_INTEGRATION_GUIDE.md) for details.
+
+   **Overflow consolidation pattern:** When MEMORY.md grows past 120 lines, consolidate detailed operational rules (deployment steps, restart protocols, credential rules) into `.claude/topics/operational-feedback.md`. Keep only principles + pointers in MEMORY.md. This way no knowledge is lost, but the always-loaded Tier 1 stays lean.
 
    See [MEMORY Integration Guide](MEMORY_INTEGRATION_GUIDE.md) for the complete three-tier architecture.
 
