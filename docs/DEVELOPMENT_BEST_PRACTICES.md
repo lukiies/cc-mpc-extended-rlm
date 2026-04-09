@@ -1,8 +1,8 @@
 # Development Best Practices - Lessons from Real Projects
 
-Universal lessons learned across 75+ sessions on production projects using cc-mpc-extended-rlm. These apply to any project, regardless of tech stack.
+Universal lessons learned across 130+ sessions on production projects using cc-mpc-extended-rlm. These apply to any project, regardless of tech stack.
 
-**Evidence base:** These patterns were extracted from real incidents — each "Why" is an actual bug, deployment failure, or user correction.
+**Evidence base:** These patterns were extracted from real incidents — each "Why" is an actual bug, deployment failure, or user correction. Updated with lessons from both web application (ASP.NET/React) and legacy system (Clipper/C) development.
 
 ---
 
@@ -246,7 +246,73 @@ ls -la /path/to/.env                   # Verify permissions
 
 ---
 
-## 10. Self-Learning Protocol — Observations from 75+ Sessions
+## 10. Approach & Communication Discipline
+
+### Discuss Approach Before Coding Complex Features
+
+**Rule:** For any non-trivial change, propose the simplest approach FIRST and wait for user feedback before writing code. Present alternatives with trade-offs when applicable.
+
+**Why:** Multiple incidents of spending hours on complex implementations when a 5-line solution existed. Over-engineering without discussion wastes time and erodes trust. The user often has context about constraints that changes the optimal approach.
+
+**Pattern:**
+```
+User: "Add feature X"
+Wrong: [immediately writes 200 lines of code]
+Right: "I see two approaches:
+  1. Simple: add a field to existing table (5 lines, quick)
+  2. Full: new module with validation (200 lines, extensible)
+  Approach 1 covers the requirement. Want me to go with that?"
+```
+
+### Save Knowledge Incrementally
+
+**Rule:** Save lessons to the knowledge base immediately after resolving each issue. Don't batch them until end of session.
+
+**Why:** Critical lessons were lost when batched at end-of-session and the session ended unexpectedly. Details fade as the session progresses. Save while the context is fresh.
+
+### Never Suggest Direct DB Edits as Workarounds
+
+**Rule:** Never suggest `UPDATE`/`INSERT` SQL as a workaround for missing UI functionality. If a field affects application behavior, it must have proper UI controls.
+
+**Why:** Direct DB edits bypass validation, create data inconsistencies, and teach users to work around the system instead of improving it.
+
+### Always Read Before Modifying
+
+**Rule:** Always read the current state of version files, changelogs, configs, and any shared files BEFORE modifying them. The user may have made local changes.
+
+**Why:** Overwriting user's local changes (version bumps, changelog entries, config tweaks) without reading first has caused lost work. `Read → modify → write` is always the correct sequence, never `assume → write`.
+
+### No Code Changes Without Evidence
+
+**Rule:** Never modify source code without clear root cause evidence. If you don't understand why something is broken, say "I don't know, let me investigate" rather than making a speculative fix.
+
+**Why:** Guessed fixes often mask the real issue and introduce new problems. Multiple incidents of "fixing" the wrong variable/function because the root cause wasn't properly investigated.
+
+### Never Duplicate Existing Logic
+
+**Rule:** Before implementing ANY helper function (validation, selection list, formatting), search the codebase for existing implementations. Always call the existing function rather than reimplementing its logic.
+
+**Why:** Duplicate logic diverges over time. Bug fixes in the original don't propagate to the copy. In one incident, a duplicated rounding function had a different precision than the original, causing financial discrepancies.
+
+**Pattern:**
+```bash
+# Before implementing, ALWAYS search first
+grep -r "function_name\|similar_pattern" --include="*.ext" .
+```
+
+### Efficient Session Pattern for Multi-Feature Work
+
+**Rule:** When implementing integrations or multi-step features, follow this order:
+1. Check external API/documentation first
+2. Propose approach and get feedback
+3. Create test immediately (before or alongside implementation)
+4. Implement in small increments with immediate verification
+
+**Why:** Sessions that followed this pattern completed 2-3x faster than sessions where testing was left until the end and issues accumulated.
+
+---
+
+## 11. Self-Learning Protocol — Observations from 130+ Sessions
 
 ### What Works Well
 - **Routing lessons by type** (project-specific vs universal) prevents cluttering individual projects with generic knowledge
@@ -256,6 +322,10 @@ ls -la /path/to/.env                   # Verify permissions
 - **Incident context ("Why")** on every rule makes edge-case judgment possible
 - **Consolidation pattern** (overflow from MEMORY.md → `operational-feedback.md` topic) keeps Tier 1 small
 - **Incident log** in MEMORY.md (one-line summary with pattern distribution) helps track improvement
+- **Mandatory startup protocol** (BLOCKING reads of MEMORY.md + CLAUDE.md + relevant topics) eliminates "rule existed but was ignored" failures
+- **Individual feedback files** (`feedback_*.md`) with structured format (rule + Why + How to apply) enable precise corrections
+- **Incremental knowledge saving** — saving lessons immediately after resolution, not batching at end of session
+- **Discuss-approach-first** pattern saves hours of wasted implementation time
 
 ### Common Mistakes to Avoid
 - Building features with cosmetic validation instead of real security
@@ -268,17 +338,27 @@ ls -la /path/to/.env                   # Verify permissions
 - Committing partial file sets (docs without code, or code without docs)
 - Modifying tests to make them pass instead of fixing the underlying bug
 - Deploying only backend or only frontend when both have changed
+- **Duplicating existing functions** instead of calling them — leads to logic divergence
+- **Guessing fixes** without evidence — introduces new bugs while masking the real issue
+- **Skipping the build step** after code changes — declaring "done" with unbuilt code
+- **Not reading local file state** before modification — overwrites user's local changes
+- **Batching knowledge saves** at end of session — loses details if session ends early
+- **Coding before discussing approach** — wastes time on over-engineered solutions
+- **Writing to databases** without explicit permission — diagnosing ≠ permission to modify
+- **Installing packages on shared servers** without asking — breaks other users' environments
 
-### Pattern Distribution from Real Incidents (75 sessions)
+### Pattern Distribution from Real Incidents (130 sessions)
 
 | Pattern | Frequency | Prevention |
 |---------|-----------|------------|
-| Restart/verify failures | 53% | Principle #3 (Build, Restart & Verification) |
-| Guess-instead-of-check | 19% | Zero Hallucination Policy |
-| Scope/focus drift | 14% | "Stay focused on primary ask" principle |
+| Restart/verify failures | 45% | Principle #3 (Build, Restart & Verification) |
+| Guess-instead-of-check | 18% | Zero Hallucination Policy + No Code Without Evidence |
+| Scope/focus drift | 12% | "Stay focused on primary ask" principle |
 | Git/commit incomplete | 8% | Git Commit Discipline rules |
-| Unauthorized deploy | 3% | "Production deploys only on explicit instruction" |
-| Destructive deploy ops | 3% | "Never improvise directory structure" |
+| Knowledge application gap | 7% | BLOCKING startup protocol — read rules BEFORE working |
+| Approach without discussion | 5% | "Discuss approach before coding" rule |
+| Unauthorized deploy/modify | 3% | "Only on explicit instruction" rules |
+| Destructive operations | 2% | "Never improvise" + "Read before modify" |
 
 ---
 
@@ -307,9 +387,16 @@ Before any change, ask: "Did the user ask for this specific change?" If not, don
 ### 7. Changed Components Must Be Restarted and Verified
 After code changes, restart ONLY the affected parts and verify with a health check. "Done" = the user can immediately test the change.
 
-These 7 principles alone prevented 80%+ of repeated mistakes across 75 sessions. Each new project will develop additional project-specific principles over time.
+### 8. Knowledge ≠ Application — Execute Every Rule, Every Time
+Having a rule in MEMORY.md or CLAUDE.md means NOTHING if it's skipped during execution. Before every multi-step procedure, mentally walk through applicable rules. This is the #1 reason for the BLOCKING startup protocol.
 
----
+### 9. Query Knowledge Base BEFORE Any Non-Trivial Action
+Always `ask_knowledge_base` FIRST before build/test/deploy. The KB knows special procedures, gotchas, and dependencies. Skipping this wastes time rediscovering known issues.
+
+### 10. Discuss Approach Before Coding Complex Features
+For non-trivial changes, propose the simplest approach and get approval before writing code. Multiple hours have been wasted on over-engineered solutions when 5-line fixes existed.
+
+These 10 principles alone prevented 85%+ of repeated mistakes across 130 sessions. Each new project will develop additional project-specific principles over time.
 
 ---
 
@@ -319,7 +406,7 @@ These 7 principles alone prevented 80%+ of repeated mistakes across 75 sessions.
 
 Early approach: "MEMORY.md wastes tokens — don't use it." This was **wrong**.
 
-After 75+ real sessions across multiple projects, the proven approach is a **three-tier architecture** where each tier has a specific, non-overlapping purpose. MEMORY.md IS valuable — but only for behavioral identity, not technical knowledge.
+After 130+ real sessions across multiple projects, the proven approach is a **three-tier architecture** where each tier has a specific, non-overlapping purpose. MEMORY.md IS valuable — but only for behavioral identity, not technical knowledge.
 
 ### The Rule: Three Tiers of Knowledge
 
@@ -394,12 +481,93 @@ The three-tier approach fixes this:
 
 ### Evidence
 
-Tested across 75+ sessions on the eFakt project (ASP.NET Core + Next.js + KSeF) and compared against the KB-only approach on cvs_ls26 (Clipper/C legacy). The three-tier approach with MEMORY.md produced:
+Tested across 130+ sessions on two production projects: eFakt (ASP.NET Core + Next.js + KSeF) and cvs_ls26 (Clipper/C legacy). The three-tier approach with MEMORY.md produced:
 - 55% fewer repeated mistakes (behavioral principles persisted)
 - Faster session startup (agent immediately knows HOW to work)
 - Better user satisfaction (corrections stick, preferences remembered)
 - Same token efficiency for technical queries (MCP on-demand unchanged)
+- BLOCKING startup protocol eliminates "rule existed but was ignored" class of failures
 
 ---
 
-*Updated: 2026-04-09 | Source: Cross-project evidence (eFakt 75 sessions, cvs_ls26 57 sessions) — three-tier architecture proven superior, universal patterns extracted from 68 real incident corrections*
+## 13. Knowledge Base Maintenance Lifecycle
+
+### When to Review KB
+- **After every sprint/release**: Check if any gotchas or rules are now outdated
+- **When rules conflict**: Newer evidence should update older rules
+- **When MEMORY.md exceeds 120 lines**: Consolidate to topic files
+- **When a topic file exceeds 100 lines**: Split into subtopics
+- **When KB query tokens are consistently high**: Review topic file sizes
+
+### Retiring Stale Knowledge
+1. Check if the rule/gotcha still applies to current codebase
+2. If outdated: remove from CLAUDE.md/MEMORY.md
+3. If partially outdated: update with current context
+4. If the gotcha was a temporary workaround (now fixed in code): remove entirely
+
+### Consolidation Patterns
+- **Multiple related feedback files** → Merge into one topic file, remove originals
+- **MEMORY.md overflow** → Move details to `.claude/topics/operational-feedback.md`
+- **Similar gotchas** → Group under one category heading
+- **Duplicate information** across files → Keep in the most authoritative location, remove elsewhere
+
+### KB Health Indicators
+
+| Indicator | Healthy | Unhealthy |
+|-----------|---------|-----------|
+| MEMORY.md size | <120 lines | >150 lines |
+| Topic file size | <100 lines | >150 lines |
+| KB query input tokens | <1500 (simple) | >3000 (simple) |
+| Rules with "why" context | 100% | <80% |
+| Stale/outdated rules | 0 | Any |
+| Feedback files with actionable format | 100% | Missing Why/How to apply |
+
+### Cross-Project Lesson Propagation
+
+When a lesson learned in one project is universal (applies regardless of tech stack):
+
+1. **Identify universality**: Does this apply to ANY project, or just this tech stack?
+2. **Route to cc-mpc-extended-rlm**: Update `docs/DEVELOPMENT_BEST_PRACTICES.md` or create a new doc
+3. **Update examples/CLAUDE.md** if it affects the template structure
+4. **Commit to cc-mpc-extended-rlm**: The `start_server.sh` auto-pulls on next session start, so all projects benefit
+
+**Standard for "universal enough":**
+- The lesson should make sense without project-specific context
+- It should prevent a mistake that ANY developer could make
+- It should be expressible as a rule with a "Why" that resonates broadly
+
+---
+
+## 14. Testing Discipline — Advanced Patterns
+
+### Test Output Management
+
+**Rule:** Never let raw terminal escape sequences, binary output, or verbose test logs appear directly in your conversation context. Always redirect test output to a file and read only filtered/relevant lines.
+
+**Why:** Raw escape sequences (from terminal UI testing, pexpect, etc.) corrupt the conversation context and make subsequent reasoning unreliable. This has caused cascading failures in 5+ sessions.
+
+**Pattern:**
+```bash
+# WRONG: raw output in context
+ssh server 'python test_something.py'
+
+# RIGHT: redirect, then read filtered
+ssh server 'python test_something.py > /tmp/test.log 2>&1; echo "EXIT=$?"'
+ssh server 'grep "PASS\|FAIL\|ERROR" /tmp/test.log; tail -5 /tmp/test.log'
+```
+
+### Test Process Cleanup
+
+**Rule:** After EVERY test run (pass or fail), clean up stale processes that may have been spawned. Long-running daemons (servers, workers) must be restarted after rebuilds to pick up new code.
+
+**Why:** Stale processes consume resources and cause intermittent failures in subsequent tests. A server running old code while tests expect new code produces confusing "sometimes works" behavior.
+
+### Dependent Test Ordering
+
+**Rule:** When tests have dependencies (test B requires data created by test A), run them in correct order. Never run dependent tests in parallel.
+
+**Why:** Running a correction invoice test before the original invoice test means no data exists to correct — the test fails for the wrong reason.
+
+---
+
+*Updated: 2026-04-09 | Source: Cross-project evidence (eFakt 75 sessions, cvs_ls26 58 sessions) — three-tier architecture proven superior, universal patterns extracted from 90+ real incident corrections*

@@ -1,6 +1,6 @@
 # MEMORY.md Integration Guide — Three-Tier Knowledge Architecture
 
-The proven approach for infinite memory, knowledge base, and self-learning protocol in Claude Code projects.
+The proven approach for infinite memory, knowledge base, and self-learning protocol in Claude Code projects. Updated with real-world patterns from 130+ production sessions.
 
 ---
 
@@ -8,7 +8,7 @@ The proven approach for infinite memory, knowledge base, and self-learning proto
 
 Early approach said "MEMORY.md wastes tokens — don't use it." This was wrong.
 
-After 75+ real sessions across multiple projects, the evidence is clear: **MEMORY.md is essential for behavioral continuity**. Without it, Claude repeats the same mistakes every session. The key insight is that MEMORY.md should contain **behavioral principles** (HOW to work), not technical knowledge (WHAT to know).
+After 130+ real sessions across multiple projects, the evidence is clear: **MEMORY.md is essential for behavioral continuity**. Without it, Claude repeats the same mistakes every session. The key insight is that MEMORY.md should contain **behavioral principles** (HOW to work), not technical knowledge (WHAT to know).
 
 ---
 
@@ -154,9 +154,33 @@ After every non-trivial task, update the knowledge base:
 - [user_role.md](user_role.md) — Description (date)
 ```
 
+### BLOCKING Startup Protocol (CRITICAL ADDITION)
+
+A pattern discovered after 58+ sessions on cvs_ls26: **having rules is useless if they're not actively processed at session start**. The most common failure mode was "rule existed in MEMORY.md but was ignored during execution."
+
+**Solution:** Add a MANDATORY BLOCKING startup section to MEMORY.md that forces the agent to read and internalize ALL rules before starting work:
+
+```markdown
+## SESSION PROTOCOL
+
+### Startup (MANDATORY BLOCKING — every new conversation)
+**You MUST NOT start any work until ALL steps below are completed.**
+
+1. Call `mcp__enhanced-rlm__get_kb_session_stats` — verify MCP responsive
+2. Display: `cc-mpc-extended-rlm active. KB status: [OK/ERROR]`
+3. **READ FULLY: MEMORY.md** — every line, every principle. Loaded in context ≠ understood.
+4. **READ FULLY: CLAUDE.md** — every section. ALL of it.
+5. **IDENTIFY which `.claude/topics/*.md` correlate to user's prompt.** READ them BEFORE starting work.
+6. **READ all `feedback_*.md` files** referenced in Memory File Index.
+
+**BLOCKING means:** If you skip ANY step and start working, you WILL violate rules and get corrected.
+```
+
+**Why this works:** A fresh session that follows this protocol has near-zero "knew the rule but didn't follow it" failures. Without it, the rate was ~7% of all incidents.
+
 ### Incident Log Pattern
 
-A proven pattern from 75+ sessions: maintain a one-line **incident log** near the end of MEMORY.md that summarizes total corrections and their pattern distribution. This helps track improvement over time:
+A proven pattern from 130+ sessions: maintain a one-line **incident log** near the end of MEMORY.md that summarizes total corrections and their pattern distribution. This helps track improvement over time:
 
 ```markdown
 ## INCIDENT LOG (summary — details in KB)
@@ -253,6 +277,8 @@ Beyond MEMORY.md, the auto-memory directory can hold individual files for specif
 
 ### feedback_*.md — User Corrections
 
+These are the most impactful memory files. Each captures a specific correction or validated approach with structured format.
+
 ```markdown
 ---
 name: feedback_discuss_approach
@@ -263,6 +289,55 @@ type: feedback
 Always discuss implementation approach BEFORE coding, especially for complex features.
 **Why:** User corrected after over-engineering a test wrapper without discussion.
 **How to apply:** At decision points, ask before implementing.
+```
+
+```markdown
+---
+name: feedback_no_code_without_evidence
+description: Never modify code without clear root cause; "I don't know" beats a guessed fix
+type: feedback
+---
+
+Never modify source code without clear root cause evidence.
+**Why:** Speculative fixes mask real issues and introduce new bugs. User corrected after wrong variable was "fixed".
+**How to apply:** When debugging, gather evidence (logs, actual values, repro steps) BEFORE proposing a code change. If evidence is inconclusive, say "I don't know yet, let me investigate further."
+```
+
+```markdown
+---
+name: feedback_always_build
+description: ALWAYS build module after code changes before declaring done
+type: feedback
+---
+
+ALWAYS run the build command after ANY code changes before declaring done.
+**Why:** User expected built module, got unbuilt source file with syntax error caught only at build time.
+**How to apply:** After every code edit, run build.sh / npm build / dotnet build before saying "done".
+```
+
+```markdown
+---
+name: feedback_db_readonly
+description: NEVER write to DB — SELECT only, give SQL to user
+type: feedback
+---
+
+NEVER execute write operations on database (UPDATE/INSERT/DELETE/ALTER) — SELECT only.
+If modifications are needed, provide the SQL to the user and let them execute it.
+**Why:** AI-driven DB writes caused data issues. User's data is their responsibility.
+**How to apply:** For any data investigation, use only SELECT. For fixes, provide SQL as text.
+```
+
+```markdown
+---
+name: feedback_never_duplicate_logic
+description: NEVER duplicate existing function logic; always CALL the existing function
+type: feedback
+---
+
+Before implementing ANY helper, search codebase for existing implementations. Always CALL existing functions.
+**Why:** Duplicate rounding function had different precision, causing financial discrepancies.
+**How to apply:** `grep -r "function_name" .` before writing any new helper. If similar exists, use it.
 ```
 
 ### user_*.md — User Profile
@@ -293,6 +368,26 @@ Architecture: KSeFSharedSessionProvider → one session for all operations.
 **Why:** KSeF rate limits (120/hr PROD, 1200/hr TEST) required conservation.
 ```
 
+### Real-World Memory File Index Example
+
+From a mature project with 58+ sessions and 27 memory files:
+
+```markdown
+## Memory File Index
+- [feedback_discuss_approach_first.md](feedback_discuss_approach_first.md) — Always propose simplest approach before coding (2026-03)
+- [feedback_always_build.md](feedback_always_build.md) — ALWAYS build after code changes before done (2026-04)
+- [feedback_db_readonly.md](feedback_db_readonly.md) — NEVER write to DB, SELECT only (2026-04)
+- [feedback_no_code_without_evidence.md](feedback_no_code_without_evidence.md) — Never guess fixes without evidence (2026-03)
+- [feedback_never_duplicate_logic.md](feedback_never_duplicate_logic.md) — Always reuse existing functions (2026-03)
+- [feedback_save_knowledge_incrementally.md](feedback_save_knowledge_incrementally.md) — Save lessons immediately, not batched (2026-03)
+- [feedback_efficient_session_pattern.md](feedback_efficient_session_pattern.md) — API first, test immediately, fast iteration (2026-03)
+- [feedback_never_raw_test_output.md](feedback_never_raw_test_output.md) — Redirect test stdout to file BEFORE running (2026-03)
+- [user_role.md](user_role.md) — User role and expertise level (2026-03)
+- [project_test_data.md](project_test_data.md) — Test data specifics (2026-03)
+```
+
+**Key insight:** Each file is small (5-15 lines), focused on ONE lesson, and uses the structured format (rule + Why + How to apply). This makes them fast to read during the startup protocol.
+
 ---
 
 ## Converting an Existing Project
@@ -316,17 +411,28 @@ See the conversion prompt template at the bottom of this guide for an automated 
 
 Tested across 130+ combined sessions on two production projects:
 
-| Metric | KB-Only (no MEMORY.md) | Three-Tier (with MEMORY.md) |
-|--------|------------------------|----------------------------|
-| Repeated behavioral mistakes | ~2-3 per session | ~0.5 per session |
-| Session startup effectiveness | Slow (re-learns approach) | Fast (principles loaded) |
-| User re-explanations needed | Frequent | Rare |
-| Technical query efficiency | Same (MCP on-demand) | Same (MCP on-demand) |
-| Token overhead per turn | Lower | +120 lines (acceptable) |
-| Overall user satisfaction | Good | Significantly better |
+| Metric | KB-Only (no MEMORY.md) | Three-Tier (with MEMORY.md) | Three-Tier + BLOCKING startup |
+|--------|------------------------|----------------------------|-------------------------------|
+| Repeated behavioral mistakes | ~2-3 per session | ~0.5 per session | ~0.2 per session |
+| Session startup effectiveness | Slow (re-learns approach) | Fast (principles loaded) | Fastest (all context pre-loaded) |
+| User re-explanations needed | Frequent | Rare | Very rare |
+| "Rule existed but ignored" | N/A | ~7% of incidents | ~1% of incidents |
+| Technical query efficiency | Same (MCP on-demand) | Same (MCP on-demand) | Same (MCP on-demand) |
+| Token overhead per turn | Lower | +120 lines (acceptable) | +120 lines (acceptable) |
+| Overall user satisfaction | Good | Significantly better | Best |
 
-The 120-line MEMORY.md overhead is vastly outweighed by the behavioral continuity it provides.
+The 120-line MEMORY.md overhead is vastly outweighed by the behavioral continuity it provides. The BLOCKING startup protocol added in later sessions virtually eliminated the "knew the rule but didn't follow it" failure class.
+
+### Key Scaling Observations
+
+From a mature project (cvs_ls26) with 69 topic files, 27 memory files, and 58+ sessions:
+
+1. **Topic files scale well** — 69 files with <100 lines each keeps per-query token usage low
+2. **Memory files accumulate fast** — 27 feedback/project/user files after 58 sessions (about 1 new file every 2 sessions)
+3. **MEMORY.md at 120 lines is tight** — project-specific procedures (test steps, build chains) consume most of it
+4. **Cross-project lessons** — about 60% of feedback lessons from one project are universal, 40% are project-specific
+5. **INDEX.md with keywords** significantly improves MCP search quality vs. bare file listings
 
 ---
 
-*Updated: 2026-04-09 | Source: Cross-project comparison (eFakt 75 sessions, cvs_ls26 57 sessions) — incident log pattern and updated evidence*
+*Updated: 2026-04-09 | Source: Cross-project comparison (eFakt 75 sessions, cvs_ls26 58 sessions) — BLOCKING startup protocol, scaling observations, and real-world memory file examples added*

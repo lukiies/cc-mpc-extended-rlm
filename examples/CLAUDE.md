@@ -39,9 +39,9 @@ The knowledge management system uses **three tiers**, each with a specific purpo
 
 | Tier | Purpose | Location | Loaded |
 |------|---------|----------|--------|
-| **Behavioral identity** | HOW to work — principles earned from real mistakes, user corrections, feedback | `MEMORY.md` (auto-memory) + `feedback_*.md` / `project_*.md` / `user_*.md` | Every turn ✓ |
-| **Project rules** | WHAT to follow — procedures, build commands, KB index, critical rules | `CLAUDE.md` (repo root) | Every turn ✓ |
-| **Technical knowledge** | WHAT to know — architecture, patterns, gotchas, code examples | `.claude/topics/*.md` | On-demand via MCP ✓ |
+| **Behavioral identity** | HOW to work — principles earned from real mistakes, user corrections, feedback | `MEMORY.md` (auto-memory) + `feedback_*.md` / `project_*.md` / `user_*.md` | Every turn |
+| **Project rules** | WHAT to follow — procedures, build commands, KB index, critical rules | `CLAUDE.md` (repo root) | Every turn |
+| **Technical knowledge** | WHAT to know — architecture, patterns, gotchas, code examples | `.claude/topics/*.md` | On-demand via MCP |
 
 **MEMORY.md IS the right place for behavioral principles** — they SHOULD be loaded every turn because they shape how you think and work. What should NOT be in MEMORY.md is technical project knowledge — that belongs in `.claude/topics/` queried via MCP.
 
@@ -78,6 +78,19 @@ The knowledge management system uses **three tiers**, each with a specific purpo
 | Technical detail | `.claude/topics/*.md` | API endpoint patterns, build procedures |
 | Critical procedural rule | `CLAUDE.md` | "Never modify DB manually", "All tests must pass" |
 | Cross-project lesson | `cc-mpc-extended-rlm/docs/` | Universal best practices |
+
+### Startup Protocol (MANDATORY BLOCKING)
+
+**You MUST NOT start any work until ALL steps below are completed.** This protocol exists because skipping it has caused repeated violations across 130+ sessions.
+
+1. Call `mcp__enhanced-rlm__get_kb_session_stats` — verify MCP responsive
+2. Display: `cc-mpc-extended-rlm active. KB status: [OK/ERROR]`
+3. **READ FULLY: MEMORY.md** — every line, every principle. Loaded in context ≠ understood. ACTIVELY process each rule.
+4. **READ FULLY: CLAUDE.md** — every section. ALL of it.
+5. **IDENTIFY which `.claude/topics/*.md` files correlate to the user's prompt.** Use INDEX.md + KB query to find them. **READ those topic files BEFORE starting work.**
+6. **READ all `feedback_*.md` files** referenced in MEMORY.md's Memory File Index — they contain hard-earned corrections.
+
+**BLOCKING means:** If you skip ANY step above and start working, you WILL violate rules and get corrected. This has happened repeatedly. Do the reads FIRST.
 
 See [MEMORY Integration Guide](../docs/MEMORY_INTEGRATION_GUIDE.md) for the complete setup procedure.
 
@@ -247,7 +260,7 @@ npm run build
 
 ## Procedural Rules
 
-These are factual/procedural rules. Each carries its "why" — the incident or reasoning that created it.
+These are factual/procedural rules. Each carries its "why" — the incident or reasoning that created it. **Proven across 130+ sessions on production projects.**
 
 ### Rule 1: NEVER MASK TEST FAILURES
 Investigate root cause → fix → verify. Never modify tests to pass artificially.
@@ -265,10 +278,9 @@ Every new feature MUST have tests covering: loading states, form interactions, A
 All config from `.env` files. API calls via configured client module.
 **Why:** Hardcoded values break across environments (dev/test/prod).
 
-### Rule 5: DATABASE — NEVER MANUAL SCHEMA MODIFICATIONS
-Use only the project's ORM migration system. NEVER run manual ALTER TABLE or direct schema changes.
-**Allowed:** Read-only queries (SELECT), ORM migration CLI commands.
-**Why:** Manual schema changes corrupt migration state. The ORM loses track, future migrations fail.
+### Rule 5: DATABASE — READ-ONLY UNLESS EXPLICITLY INSTRUCTED
+NEVER execute write operations (INSERT/UPDATE/DELETE/ALTER) against any database without explicit user instruction. Read (SELECT) is always safe. If the user needs data modified, provide the SQL and let THEM execute it.
+**Why:** The user's data is THEIR data. Diagnosing a problem ≠ permission to fix it by modifying data. Multiple incidents across projects where AI-driven DB writes caused data corruption.
 
 ### Rule 6: RESTART AFTER EVERY CODE CHANGE
 After code changes: kill process → clean build → start → verify with health check → THEN report done.
@@ -290,23 +302,52 @@ ALWAYS deploy backend AND frontend together. Never deploy from a dirty workspace
 NEVER deploy to production without the user's explicit instruction. Finishing code ≠ permission to deploy.
 **Why:** Each deploy is a separate decision. Standing permission doesn't exist.
 
+### Rule 11: ALWAYS BUILD AFTER CODE CHANGES
+ALWAYS run the build command after ANY code changes before declaring done. The user expects a built module, not just an edited source file.
+**Why:** Multiple incidents of declaring "done" with unbuilt code that had syntax errors only caught at build time.
+
+### Rule 12: DISCUSS APPROACH BEFORE CODING COMPLEX FEATURES
+For non-trivial changes, propose the simplest approach FIRST and get user approval before writing code. Never over-engineer without discussion.
+**Why:** Wasted hours on complex implementations when a 5-line solution existed. User corrections after coding are expensive.
+
+### Rule 13: NEVER DUPLICATE EXISTING LOGIC
+Before implementing ANY helper function, search the codebase for existing implementations. ALWAYS call the existing function rather than reimplementing its logic.
+**Why:** Duplicate logic diverges over time. Bug fixes in the original don't propagate to the copy.
+
+### Rule 14: NO CODE CHANGES WITHOUT EVIDENCE
+Never modify source code without clear root cause evidence. "I don't know" is better than a guessed fix that introduces new bugs.
+**Why:** Speculative fixes often mask the real issue and introduce new problems. Multiple incidents of "fixing" the wrong thing.
+
+### Rule 15: ALWAYS READ LOCAL STATE BEFORE MODIFYING
+Always read the current state of files (version files, changelogs, configs) BEFORE modifying them. The user may have made local changes you don't know about.
+**Why:** Overwriting user's local changes without reading first caused lost work.
+
+### Rule 16: SAVE KNOWLEDGE INCREMENTALLY
+Save lessons to knowledge base immediately after resolving each issue. Don't batch until end of session — you may forget details or the session may end unexpectedly.
+**Why:** Critical lessons were lost when batched at end-of-session and the session ended early.
+
+### Rule 17: NEVER SUGGEST DIRECT DB EDITS AS WORKAROUNDS
+Never suggest SQL UPDATE/INSERT as a workaround for missing UI functionality. Every field that affects behavior must have proper UI controls.
+**Why:** Direct DB edits bypass validation, create data inconsistencies, and teach users to work around the system.
+
 ---
 
 ## Key Rules
 
-1. **Use TypeScript** for all new code
-2. **Follow ESLint rules** - run `npm run lint` before committing
+1. **[Your language/framework rule]** for all new code
+2. **Follow linting rules** - run linter before committing
 3. **Write tests** for all new features
-4. **Use 2 spaces** for indentation
+4. **[Your indentation preference]** for indentation
 
 ## Key Gotchas
 
 1. **Environment variables** - copy `.env.example` to `.env` before running
-2. **Database migrations** - run `npm run migrate` after pulling new changes
-3. **API routes** - all routes start with `/api/v1/`
-4. **Web auth security** - NEVER use client-side CSS/JS hiding for content protection. Protected content must only be served after server-side validation. Always test with `curl`, not just a browser. See [Development Best Practices](../docs/DEVELOPMENT_BEST_PRACTICES.md)
-5. **Stale builds** - Always clean + rebuild after code changes. Cached builds mask your changes.
-6. **API documentation** - When API endpoints change, update documentation in the same commit.
+2. **Database migrations** - run migration command after pulling new changes
+3. **Web auth security** - NEVER use client-side CSS/JS hiding for content protection. Protected content must only be served after server-side validation. Always test with `curl`, not just a browser. See [Development Best Practices](../docs/DEVELOPMENT_BEST_PRACTICES.md)
+4. **Stale builds** - Always clean + rebuild after code changes. Cached builds mask your changes.
+5. **API documentation** - When API endpoints change, update documentation in the same commit.
+6. **Verify DB columns/tables before query changes** — Adding nonexistent columns to queries causes silent failures (no errors, just empty results). Always verify schema before modifying queries.
+7. **Never install packages on shared servers without permission** — Shared development/production servers may have other users. Report what's needed and ask before installing.
 
 ## Knowledge Base
 

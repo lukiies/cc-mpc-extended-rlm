@@ -225,10 +225,25 @@ Please help me:
    4. Update knowledge base with practical learnings
    ```
 
-   After these required sections, CLAUDE.md should contain ONLY:
-   - Critical rules that MUST be followed
+   After these required sections, also include:
+   ```markdown
+   ### Behavioral Identity → MEMORY.md
+
+   **My behavioral identity lives in MEMORY.md (auto-memory).** It contains principles learned
+   from real developer corrections. MEMORY.md shapes my behavior. This file shapes my project knowledge.
+
+   **If MEMORY.md is empty or missing**, these are the critical behavioral principles to follow:
+   1. Never declare done without verifying the actual running system
+   2. Query KB BEFORE any non-trivial action (build, test, deploy)
+   3. Never guess — investigate or ask
+   4. Stay focused on the user's primary ask
+   5. Discuss approach before coding complex features
+   ```
+
+   Then CLAUDE.md should contain:
+   - Critical rules that MUST be followed (with "Why" context for each)
    - Build/run commands
-   - Key gotchas (max 10)
+   - Key gotchas (max 10-20, each with incident context)
    - Links to detailed docs in .claude/
 
 4. **Move to .claude/REFERENCE.md:**
@@ -698,6 +713,58 @@ For research, planning, or analysis documents that inform future development:
 - Keeps implementation docs separate from planning docs
 - New team members can understand "why" decisions were made
 - Future development phases can reference earlier research
+
+---
+
+## Knowledge Base Maintenance Lifecycle
+
+Once set up, the KB needs periodic maintenance to stay healthy and effective.
+
+### Regular Maintenance Tasks
+
+| When | Action | Why |
+|------|--------|-----|
+| After each sprint/release | Review gotchas — remove outdated ones | Stale rules confuse future sessions |
+| When MEMORY.md > 120 lines | Consolidate details to `.claude/topics/operational-feedback.md` | Prevent truncation |
+| When topic file > 100 lines | Split into subtopics | Keep per-query token usage low |
+| When KB query tokens > 3000 (simple) | Review topic file sizes | Haiku extraction becomes inefficient |
+| After merging feature branches | Check for conflicting rules | Branch-specific rules may not apply to main |
+| Monthly (or every ~20 sessions) | Audit feedback files — merge similar ones | Prevent feedback file proliferation |
+
+### Consolidation Decision Tree
+
+```
+Is MEMORY.md > 120 lines?
+  ├── YES → Move detailed procedures to .claude/topics/operational-feedback.md
+  │         Keep only principles + pointers in MEMORY.md
+  └── NO → OK
+
+Are there > 5 feedback_*.md files on the same topic?
+  ├── YES → Merge into one comprehensive feedback file
+  │         Or promote to a .claude/topics/ file if it's technical
+  └── NO → OK
+
+Is a topic file > 100 lines?
+  ├── YES → Split by subtopic (e.g., testing.md → test-workflow.md + test-gotchas.md)
+  │         Update INDEX.md with new files
+  └── NO → OK
+
+Is a rule/gotcha outdated (code was fixed)?
+  ├── YES → Remove from CLAUDE.md and any topic files
+  │         No need to archive — git history has it
+  └── NO → Keep it
+```
+
+### Cross-Project Lesson Propagation
+
+When lessons from a project are universal:
+
+1. **Identify**: Does this apply to ANY project regardless of tech stack?
+2. **Route**: Update `cc-mpc-extended-rlm/docs/DEVELOPMENT_BEST_PRACTICES.md`
+3. **Template**: If it affects CLAUDE.md structure, update `examples/CLAUDE.md`
+4. **Commit**: Push to cc-mpc-extended-rlm — `start_server.sh` auto-pulls on next session
+
+**Standard**: A universal lesson should make sense without project context, prevent a mistake any developer could make, and be expressible as a rule with a broadly-resonant "Why."
 
 ---
 

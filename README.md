@@ -694,6 +694,18 @@ Key findings:
 | Windows + WSL Remote | Full support | Use `bash -c` (NOT `wsl.exe`), env vars from `~/.profile` |
 | Windows + WSL (no Remote) | Full support | Use `wsl.exe bash -lc` wrapper, env vars from `~/.profile` |
 
+## Guides & Documentation
+
+| Guide | Purpose |
+|-------|---------|
+| [Knowledge Base Setup](docs/KNOWLEDGE_BASE_SETUP_GUIDE.md) | Transform any project into a structured KB |
+| [MEMORY Integration](docs/MEMORY_INTEGRATION_GUIDE.md) | Three-tier architecture: behavioral identity + project rules + on-demand KB |
+| [Development Best Practices](docs/DEVELOPMENT_BEST_PRACTICES.md) | Universal lessons from 130+ production sessions |
+| [Remote SSH](docs/VSCODE_REMOTE_SSH_GUIDE.md) | Persistent background work over SSH |
+| [Website](docs/WEBSITE_GUIDE.md) | Optional documentation website from KB |
+| [Advanced Enhancement](docs/BOOST_CONTINUOUS_LEARNING_GUIDE.md) | Hooks, skills, agents, plugin packaging |
+| [Example CLAUDE.md](examples/CLAUDE.md) | Battle-tested template for new projects (17 procedural rules) |
+
 ## Security Notes
 
 - **Never commit API keys** to version control
